@@ -1,0 +1,9 @@
+<div class="bar">
+  <a class="brand" href="/">Kataria <small>Call review</small></a>
+  <nav class="nav">
+    <a href="/" class="{{ 'on' if page == 'list' else '' }}">Calls</a>
+    <a href="/stats" class="{{ 'on' if page == 'stats' else '' }}">Agreement</a>
+    {% if is_admin %}<a href="/admin" class="{{ 'on' if page == 'admin' else '' }}">Admin</a>{% endif %}
+  </nav>
+  <div class="who" id="who"></div>
+</div>

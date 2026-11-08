@@ -1,0 +1,2021 @@
+<title>Kataria AI Audit</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+*{user-select:none;-webkit-user-select:none}
+input,textarea,select,[contenteditable],.main,.main *{user-select:text;-webkit-user-select:text}
+:root{
+  --bg:#f6f4ef;
+  --bg2:#efebe3;
+  --surface:rgba(255,255,255,0.78);
+  --surface-h:rgba(255,255,255,0.92);
+  --surface-a:#ffffff;
+  --border:#e1dcd1;
+  --border-hi:#cfc6b6;
+  --t1:#1c1f24;
+  --t2:#5b6068;
+  --t3:#80858d;
+  --accent:#2f5d8c;
+  --accent-bg:rgba(47,93,140,0.10);
+  --ft:#b8471f;
+  --ft-bg:rgba(184,71,31,0.12);
+  --green:#1a7f37;
+  --yellow:#a05a00;
+  --red:#c0392b;
+  --green-bg:rgba(40,205,65,0.13);
+  --yellow-bg:rgba(244,161,0,0.13);
+  --red-bg:rgba(255,59,48,0.11);
+  --r:14px;--rs:8px;
+  --spring:cubic-bezier(0.34,1.18,0.64,1);
+  --shadow:0 1px 3px rgba(60,45,20,0.07),0 6px 20px rgba(60,45,20,0.06);
+  --shadow-s:0 1px 2px rgba(60,45,20,0.06),0 2px 8px rgba(60,45,20,0.05);
+}
+body{
+  font:400 13.5px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:var(--bg);color:var(--t1);
+  -webkit-font-smoothing:antialiased;font-optical-sizing:auto;
+}
+
+/* Layout: top bar, then the call list or the open page, full width */
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+[hidden]{display:none!important}
+
+/* Top bar */
+.topbar{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;padding:10px 20px;background:rgba(255,255,255,0.65);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--border);flex-shrink:0}
+.brand-col{display:flex;flex-direction:column;gap:7px;min-width:0}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand h1{font-family:"Source Serif 4",Georgia,serif;font-size:18px;font-weight:700;letter-spacing:-0.01em;line-height:1.2;color:var(--t1);white-space:nowrap}
+.sb-link{font-size:12px;color:var(--accent);text-decoration:none;font-weight:600;white-space:nowrap}
+.sb-link:hover{text-decoration:underline}
+
+/* Call list */
+.list-view{flex:1;min-height:0;display:flex;flex-direction:column}
+.file-list{flex:1;overflow-y:auto;padding:12px 20px;scrollbar-width:thin;scrollbar-color:rgba(0,0,0,0.12) transparent}
+
+/* CUDA badge */
+.cuda-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.03em;flex-shrink:0;white-space:nowrap}
+.cuda-on{background:var(--green-bg);color:var(--green)}
+.cuda-off{background:rgba(0,0,0,0.07);color:var(--t3)}
+.cuda-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* Engine bar */
+.engine-bar{display:flex;align-items:center;gap:8px;min-width:0}
+.engine-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:rgba(0,0,0,0.18);transition:background 300ms ease}
+.engine-dot-idle{background:rgba(0,0,0,0.20)}
+.engine-dot-loading{background:var(--yellow);animation:pulse 1s ease-in-out infinite}
+.engine-dot-ready{background:var(--green)}
+.engine-dot-error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.engine-status{font-size:11px;color:var(--t2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.engine-btn{padding:5px 12px;border-radius:7px;font-size:11.5px;font-weight:600;border:none;cursor:pointer;flex-shrink:0;transition:transform 80ms ease,opacity 80ms ease}
+.engine-btn:active{transform:scale(0.96)}
+.engine-btn-kill{padding:5px 8px;background:#8b0000;color:#fff;border:1px solid #6f0000}
+.engine-btn-kill:hover{background:#a40000}
+
+/* Batch bar */
+.batch-bar{display:flex;align-items:center;gap:8px;padding:10px 20px;border-top:1px solid var(--border);flex-shrink:0;background:rgba(255,255,255,0.65);flex-wrap:wrap}
+.batch-bar select{font-size:11.5px;padding:4px 7px;border-radius:7px;border:1px solid var(--border);background:var(--surface-a);color:var(--t1);outline:none;height:26px}
+.batch-count{font-size:11px;font-weight:600;color:var(--t2);min-width:60px}
+.batch-run-btn{padding:5px 12px;border-radius:7px;font-size:11.5px;font-weight:600;border:none;cursor:pointer;background:var(--accent);color:#fff;transition:transform 80ms ease,opacity 80ms ease}
+.batch-run-btn:active{transform:scale(0.96)}
+.batch-run-btn:disabled{opacity:0.35;cursor:default}
+
+/* Batch progress */
+.batch-progress{margin-left:auto}
+.batch-live{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface-a);color:var(--t1);font-size:11.5px;font-weight:600;text-decoration:none}
+.batch-live:hover{border-color:var(--accent)}
+.batch-live-go{margin-left:auto;color:var(--accent)}
+.batch-stop{width:100%;margin-top:6px;color:var(--red)}
+
+
+/* Main */
+.main{flex:1;min-height:0;overflow-y:auto;padding:20px 28px 28px;scrollbar-width:thin;scrollbar-color:rgba(0,0,0,0.12) transparent}
+.back-btn{display:inline-flex;align-items:center;gap:4px;margin-bottom:14px;padding:0;border:0;background:none;color:var(--accent);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.back-btn:hover{text-decoration:underline}
+
+/* Empty */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:65vh;gap:10px;text-align:center}
+.empty-ico{font-size:42px;opacity:0.25}
+.empty h2{font-family:"Source Serif 4",Georgia,serif;font-size:20px;font-weight:600;letter-spacing:-0.01em;color:var(--t2)}
+.empty p{font-size:13px;color:var(--t3)}
+
+/* Card — frosted glass floating above the bg */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);box-shadow:var(--shadow)}
+.card+.card{margin-top:14px}
+.ct{font-size:10.5px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:14px}
+
+/* Info grid */
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px}
+.il{font-size:10.5px;color:var(--t3);letter-spacing:0.01em;margin-bottom:2px}
+.iv{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Actions */
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.acts-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.acts-row+.acts-row{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.btn{padding:9px 18px;border-radius:10px;font-size:13px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;letter-spacing:-0.01em;transition:transform 90ms ease,opacity 90ms ease;user-select:none;-webkit-user-select:none}
+.btn:active{transform:scale(0.97)}
+.btn-p{background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(47,93,140,0.30)}
+.btn-p:hover{opacity:0.88}
+.btn-p:disabled{opacity:0.32;cursor:default;transform:none;box-shadow:none}
+.btn-s{background:rgba(0,0,0,0.06);color:var(--t1);border:1px solid var(--border)}
+.btn-s:hover{background:rgba(0,0,0,0.09)}
+.btn-s:disabled{opacity:0.32;cursor:default;transform:none}
+.btn-g{background:var(--green-bg);color:var(--green);border:1px solid rgba(40,205,65,0.22)}
+.btn-g:hover{background:rgba(40,205,65,0.2)}
+
+/* Recording player */
+.pl{display:flex;align-items:center;gap:12px}
+.pl-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;box-shadow:0 1px 4px rgba(47,93,140,0.30);transition:transform 90ms ease,opacity 90ms ease}
+.pl-btn:hover{opacity:0.88}
+.pl-btn:active{transform:scale(0.94)}
+.pl-btn:disabled{opacity:0.32;cursor:default;transform:none;box-shadow:none}
+.pl-btn:focus-visible,.pl-ic:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-bg)}
+.pl-time{font-size:11.5px;color:var(--t2);font-variant-numeric:tabular-nums;min-width:36px;text-align:center;flex-shrink:0}
+.pl-vol{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.pl-ic{background:none;border:none;color:var(--t2);cursor:pointer;display:inline-flex;padding:5px;border-radius:6px;transition:background 70ms ease,color 70ms ease}
+.pl-ic:hover{color:var(--t1);background:rgba(0,0,0,0.05)}
+.pl-range{-webkit-appearance:none;appearance:none;flex:1;min-width:80px;height:4px;border-radius:2px;outline:none;cursor:pointer;
+  background:linear-gradient(to right,var(--accent) var(--pct,0%),var(--border) var(--pct,0%))}
+.pl-range::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+.pl-range::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+.pl-range:focus-visible{box-shadow:0 0 0 3px var(--accent-bg)}
+.pl-vol .pl-range{flex:none;width:84px;min-width:0}
+.pl-msg{font-size:11.5px;color:var(--red);margin-top:8px}
+@media(max-width:640px){.pl-vol .pl-range{display:none}}
+button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Status pill */
+.status-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:500;background:var(--yellow-bg);color:var(--yellow)}
+
+/* Toggle switch */
+.tog-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}
+.tog-row:last-child{border-bottom:none}
+.tog-info{flex:1;min-width:0}
+.tog-label{font-size:12.5px;font-weight:600;color:var(--t1)}
+.tog-rt{font-size:11px;font-weight:600;margin-top:4px;display:flex;align-items:center;gap:4px}
+.rt-none{color:var(--t3)}
+.rt-done{color:var(--green)}
+.rt-running{color:var(--accent)}
+.rt-row{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;color:var(--t2);margin-top:4px}
+.rt-row span:last-child{font-weight:600;font-variant-numeric:tabular-nums}
+.rt-total{border-top:1px solid var(--border);padding-top:5px;margin-top:6px;color:var(--t1);font-weight:600}
+.tog-desc{font-size:11px;color:var(--t3);margin-top:2px;line-height:1.4}
+.tog-wrap{position:relative;width:38px;height:22px;flex-shrink:0;margin-top:1px}
+.tog-wrap input{opacity:0;width:0;height:0;position:absolute}
+.tog-track{display:block;width:38px;height:22px;border-radius:11px;background:rgba(0,0,0,0.14);cursor:pointer;transition:background 200ms ease;position:relative}
+.tog-track::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.18);transition:transform 200ms var(--spring)}
+.tog-wrap input:checked+.tog-track{background:var(--accent)}
+.tog-wrap input:checked+.tog-track::after{transform:translateX(16px)}
+.tog-wrap input:disabled+.tog-track{opacity:0.35;cursor:default}
+.llm-settings{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.job-progress{font-size:10px;font-weight:500;opacity:0.7;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;display:inline-block}
+
+/* Spinner */
+.spin{width:13px;height:13px;border:2px solid rgba(0,0,0,0.15);border-top-color:var(--accent);border-radius:50%;animation:rot 0.65s linear infinite;flex-shrink:0}
+.spin-y{border-top-color:var(--yellow)}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* Section label */
+.sl{font-size:10.5px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin:22px 0 8px}
+.sl:first-child{margin-top:0}
+
+/* Score hero */
+.score-hero{display:flex;align-items:center;gap:22px}
+.score-ring{position:relative;width:82px;height:82px;flex-shrink:0}
+.score-ring svg{transform:rotate(-90deg)}
+.score-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:17px;font-weight:700;letter-spacing:-0.03em;line-height:1;color:var(--t1)}
+.score-sub{font-size:8px;font-weight:500;color:var(--t3);letter-spacing:0.04em;margin-top:1px}
+.score-dtl{flex:1}
+.score-grade{font-family:"Source Serif 4",Georgia,serif;font-size:26px;font-weight:700;letter-spacing:-0.01em;color:var(--t1)}
+.score-chips{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
+
+/* Chips */
+.chip{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;letter-spacing:0.01em}
+.chip-g{background:var(--green-bg);color:var(--green)}
+.chip-y{background:var(--yellow-bg);color:var(--yellow)}
+.chip-r{background:var(--red-bg);color:var(--red)}
+.chip-b{background:var(--accent-bg);color:var(--accent)}
+.chip-n{background:rgba(0,0,0,0.06);color:var(--t2)}
+
+/* Error banner */
+#errBanner{display:none;position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:999;
+  background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;
+  max-width:560px;width:calc(100vw - 32px);padding:12px 14px;box-shadow:0 4px 20px rgba(0,0,0,0.18)}
+#errBanner.show{display:block}
+.err-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.err-title{font-size:13px;font-weight:700;color:var(--red);flex:1}
+.err-close{background:none;border:none;cursor:pointer;font-size:18px;line-height:1;color:var(--red);padding:0 2px}
+.err-body{font-size:11px;font-family:monospace;color:var(--t2);white-space:pre-wrap;
+  max-height:160px;overflow-y:auto;background:var(--bg2);border-radius:6px;padding:8px 10px}
+
+/* Priority rows */
+.prow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background 60ms ease;border-radius:5px;padding-left:4px;padding-right:4px}
+.prow:last-child{border-bottom:none}
+.prow:hover{background:rgba(0,0,0,0.025)}
+.prow-detail{display:none;font-size:11.5px;color:var(--t2);line-height:1.55;padding:6px 4px 10px 28px;border-bottom:1px solid var(--border)}
+.prow-detail.open{display:block}
+
+/* Rating badge */
+.rb{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:0.02em;flex-shrink:0}
+.rb-full{background:var(--green-bg);color:var(--green)}
+.rb-half{background:var(--yellow-bg);color:var(--yellow)}
+.rb-zero{background:var(--red-bg);color:var(--red)}
+
+/* Score digit badge */
+.sd{font-size:12px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:-0.01em;flex-shrink:0;font-variant-numeric:tabular-nums}
+.sd-full{background:var(--green-bg);color:var(--green)}
+.sd-half{background:var(--yellow-bg);color:var(--yellow)}
+.sd-zero{background:var(--red-bg);color:var(--red)}
+
+/* Scorecard */
+.sc-section{margin-bottom:6px;border-radius:var(--rs);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-s)}
+.sc-head{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;background:rgba(0,0,0,0.025);cursor:pointer;user-select:none;transition:background 70ms ease}
+.sc-head:hover{background:rgba(0,0,0,0.04)}
+.sc-name{font-size:13px;font-weight:600;letter-spacing:-0.015em;color:var(--t1)}
+.sc-right{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--t2)}
+.chev{color:var(--t3);transition:transform 280ms var(--spring);font-size:14px;font-weight:400;line-height:1}
+.chev.open{transform:rotate(90deg)}
+.sc-body{overflow:hidden;max-height:0;opacity:0;transition:max-height 320ms var(--spring),opacity 220ms ease}
+.sc-body.exp{max-height:5000px;opacity:1}
+.param-row{display:grid;grid-template-columns:1fr 72px;gap:12px;padding:10px 15px;border-top:1px solid var(--border);align-items:start;transition:background 70ms ease;background:#fff}
+.param-row:hover{background:rgba(0,0,0,0.02)}
+.pq{font-size:12.5px;color:var(--t1);line-height:1.45}
+.pe{font-size:11.5px;color:var(--t2);margin-top:3px;line-height:1.5}
+/* Evidence under each parameter */
+.ev{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px}
+.ev .pe{margin-top:0;flex-basis:100%}
+.ev-src{font-size:10px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.ev-ft{background:var(--ft-bg);color:#9a3a17}
+.ev-stock{background:var(--accent-bg);color:var(--accent)}
+.ev-rule{background:rgba(0,0,0,.07);color:var(--t2)}
+.ev-check{background:var(--yellow-bg);color:var(--yellow)}
+.turn-chip{font:inherit;font-size:10.5px;font-weight:600;min-height:24px;padding:2px 8px;border-radius:5px;border:1px solid var(--border-hi);background:#fff;color:var(--t1);cursor:pointer;font-variant-numeric:tabular-nums}
+.turn-chip:hover{border-color:var(--accent);color:var(--accent)}
+.booking-check{padding:14px 16px;margin-top:10px;display:grid;gap:6px}
+.human-review{padding:14px 16px;margin-top:10px;display:grid;gap:6px;border-left:3px solid var(--accent)}
+.hr-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12px;color:var(--t2)}
+.hr-count{margin-left:auto}
+.hr-score{font-size:12.5px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.hr-sub{font-size:11.5px;color:var(--t3)}
+.hr-line{font-size:12.5px;line-height:1.5}
+.booking-check-head{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600}
+.param-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+
+/* Coaching suggestions */
+.tip-card{padding:4px 16px}
+.tip-row{padding:10px 0;border-bottom:1px solid var(--border)}
+.tip-row:last-child{border-bottom:none}
+.tip-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.tip-name{font-size:12.5px;font-weight:600;color:var(--t1)}
+.tip-lost{font-size:11px;font-weight:700;color:var(--red);white-space:nowrap}
+.tip-text{font-size:12px;color:var(--t2);margin-top:3px;line-height:1.5}
+
+/* Transcript panel */
+.tx-panel{background:rgba(255,255,255,0.80);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;max-height:0;opacity:0;transition:max-height 420ms var(--spring),opacity 220ms ease;margin-top:14px;box-shadow:var(--shadow)}
+.tx-panel.open{max-height:2000px;opacity:1}
+.tx-inner{padding:4px 0;max-height:520px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(0,0,0,0.12) transparent}
+.tx-row{display:flex;gap:14px;padding:10px 16px;border-bottom:1px solid rgba(0,0,0,0.05);align-items:flex-start;transition:background 60ms ease}
+.tx-row:last-child{border-bottom:none}
+.tx-row:hover{background:rgba(0,0,0,0.02)}
+.tx-tid{font-size:9.5px;color:var(--t3);margin-top:2px;font-variant-numeric:tabular-nums}
+.tx-row.tx-hit{animation:txhit 2.6s ease}
+@keyframes txhit{0%,60%{background:var(--yellow-bg)}100%{background:transparent}}
+.tx-meta{flex-shrink:0;width:72px;padding-top:1px}
+.tx-badge{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:0.04em;text-transform:uppercase}
+.tx-badge-agent{background:var(--accent-bg);color:var(--accent)}
+.tx-badge-cust{background:var(--green-bg);color:var(--green)}
+.tx-badge-unk{background:rgba(0,0,0,0.06);color:var(--t3)}
+.tx-time{font-size:9.5px;color:var(--t3);margin-top:3px;letter-spacing:0.01em}
+.tx-text{font-size:13px;line-height:1.6;color:var(--t1);flex:1;padding-top:1px}
+.tx-empty{padding:20px;text-align:center;color:var(--t3);font-size:12px}
+
+/* Transcript plain fallback */
+.tx-pre{font-family:ui-monospace,"SF Mono","Fira Code",monospace;font-size:11.5px;line-height:1.65;color:var(--t2);white-space:pre-wrap;word-break:break-word;padding:16px}
+
+/* Reveal */
+.rv{opacity:0;transform:translateY(8px);animation:rv 320ms var(--spring) forwards}
+@keyframes rv{to{opacity:1;transform:translateY(0)}}
+.rv1{animation-delay:0ms}.rv2{animation-delay:50ms}.rv3{animation-delay:100ms}.rv4{animation-delay:150ms}
+
+/* Divider */
+.div{height:1px;background:var(--border);margin:16px 0}
+
+@media(prefers-reduced-motion:reduce){
+  .rv{animation:none;opacity:1;transform:none}
+  .sc-body,.tx-panel{transition:none}
+  .chev,.llm-chev{transition:none}
+}
+@media(prefers-reduced-transparency:reduce){
+  .topbar{background:#f0f0f5;backdrop-filter:none}
+  .card{background:#fff;backdrop-filter:none}
+  .tx-panel{background:#fff;backdrop-filter:none}
+}
+
+/* Confirmation modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.28);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;transition:opacity 200ms ease}
+.modal-overlay.modal-in{opacity:1}
+.modal-box{background:rgba(255,255,255,0.92);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--border);border-radius:18px;padding:24px;width:340px;box-shadow:0 8px 40px rgba(0,0,0,0.18);transform:scale(0.94) translateY(6px);transition:transform 220ms var(--spring);pointer-events:all}
+.modal-overlay.modal-in .modal-box{transform:scale(1) translateY(0)}
+.modal-title{font-size:16px;font-weight:700;letter-spacing:-0.025em;color:var(--t1);margin-bottom:8px}
+.modal-msg{font-size:13px;color:var(--t2);line-height:1.55;margin-bottom:20px}
+.modal-acts{display:flex;gap:8px;justify-content:flex-end}
+
+/* CRM card layout */
+.crm-row{display:flex;gap:24px;flex-wrap:wrap}
+.crm-field{flex:1;min-width:120px}
+.crm-name{flex:1.5}
+.crm-val-lg{font-size:15px;font-weight:700;letter-spacing:-0.02em;color:var(--t1);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crm-warranty{display:flex;gap:16px;flex-wrap:wrap}
+.crm-wpill{display:flex;flex-direction:column;gap:4px}
+
+/* Day bar: one day of calls at a time */
+.day-bar{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.day-nav{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--surface-a);color:var(--t2);font-size:15px;line-height:1;cursor:pointer;flex-shrink:0}
+.day-nav:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.day-nav:disabled{opacity:.35;cursor:default}
+.day-pick{width:140px;height:28px;padding:0 8px;border-radius:7px;border:1px solid var(--border);background:var(--surface-a);color:var(--t1);font:inherit;font-size:12.5px;font-weight:600}
+.day-meta{font-size:12px;color:var(--t3);white-space:nowrap}
+.day-meta b{color:var(--t2);font-weight:600}
+.day-meta a{color:inherit;text-decoration:none}
+.day-meta a:hover b,.day-meta a:hover{color:var(--accent)}
+.day-tools{display:flex;gap:6px;margin-left:auto;flex-shrink:0}
+.tool-btn{height:28px;padding:0 8px;border-radius:7px;border:1px solid var(--border);background:var(--surface-a);color:var(--t1);font:inherit;font-size:11.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;text-decoration:none}
+.tool-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tool-btn.tool-p{background:var(--accent);border-color:var(--accent);color:#fff}
+.tool-btn.tool-p:hover{opacity:.88;color:#fff}
+.tool-btn.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.filters{display:grid;grid-template-columns:repeat(4,minmax(0,220px)) auto;gap:8px;padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.filters input,.filters select{min-width:0;height:30px;padding:0 9px;border-radius:7px;border:1px solid var(--border);background:var(--surface-a);color:var(--t1);font:inherit;font-size:12px}
+.select-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.select-bar .sb-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-right:4px}
+.select-bar .tool-btn:disabled{opacity:.5;cursor:default}
+.filters .f-active{border-color:var(--accent);background:var(--accent-bg)}
+.fetch-status{margin:10px 20px 0;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface-a);font-size:11.5px;color:var(--t2);display:flex;align-items:center;gap:7px;flex-shrink:0}
+.fetch-status[hidden]{display:none}
+.fetch-status.err{border-color:rgba(192,57,43,.35);background:var(--red-bg);color:var(--red)}
+.fetch-status a{margin-left:auto;color:var(--accent);font-weight:600;text-decoration:none}
+
+.list-note{padding:18px 14px;color:var(--t3);font-size:12px;line-height:1.55}
+.list-note button{margin-top:10px}
+
+/* Fetch form */
+.modal-box.modal-wide{width:400px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.form-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;color:var(--t2)}
+.form-grid .full{grid-column:1 / -1}
+.form-grid input,.form-grid select{height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--t1);font:inherit;font-size:13px;font-weight:400}
+.form-hint{font-size:11.5px;color:var(--t3);line-height:1.5;margin:-8px 0 18px}
+
+/* Day overview + CRE performance */
+.day-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.day-head h2{font-family:"Source Serif 4",Georgia,serif;font-size:22px;font-weight:700;letter-spacing:-0.01em}
+.day-head span{font-size:12.5px;color:var(--t3)}
+.day-head .acts{margin-left:auto}
+.cre-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.cre-table th{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);text-align:left;padding:0 10px 10px;cursor:pointer;white-space:nowrap;user-select:none}
+.cre-table th:hover{color:var(--t1)}
+.cre-day th,.cre-day th:hover,.cre-day tbody tr{cursor:default;color:inherit}
+.cre-day th{color:var(--t3)}
+.cre-day td.num .chip{display:inline-block}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:8px;white-space:nowrap}
+.cre-table th.num,.cre-table td.num{text-align:right}
+.cre-table td{padding:10px;border-top:1px solid var(--border);vertical-align:top}
+.cre-table tbody tr{cursor:pointer;transition:background 60ms ease}
+.cre-table tbody tr:hover{background:rgba(0,0,0,.025)}
+.cre-name{font-weight:600}
+.cre-code{font-size:11px;color:var(--t3)}
+.weak{display:flex;flex-wrap:wrap;gap:4px}
+.weak .chip{font-size:10.5px;padding:2px 8px}
+.ct-mix{font-size:11px;color:var(--t2);white-space:nowrap}
+</style>
+
+<div id="errBanner">
+  <div class="err-head">
+    <span class="err-title">⚠ Job failed</span>
+    <button class="err-close" onclick="dismissErr()">✕</button>
+  </div>
+  <pre class="err-body" id="errBody"></pre>
+</div>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand-col">
+      <div class="brand">
+        <h1>Kataria AI Audit</h1>
+        <a class="sb-link" href="/diagrams">How it works →</a>
+      </div>
+      <div class="engine-bar" id="engineBar">
+        <div id="cudaBadge" class="cuda-pill cuda-off"><span class="cuda-dot"></span>GPU —</div>
+        <span class="engine-dot engine-dot-idle" id="engineDot"></span>
+        <span class="engine-status" id="engineStatus">Engine idle</span>
+        <button class="engine-btn engine-btn-kill" id="emergencyBtn" title="Stop Kataria jobs, Ollama and this dashboard" onclick="emergencyStop()">⚠ Kill</button>
+      </div>
+    </div>
+    <div class="day-bar">
+      <button class="day-nav" id="dayPrev" onclick="shiftDay(1)" aria-label="Earlier day with calls" title="Earlier day with calls">‹</button>
+      <input type="date" class="day-pick" id="dayPick" aria-label="Call date" onchange="setDay(this.value)">
+      <button class="day-nav" id="dayNext" onclick="shiftDay(-1)" aria-label="Later day with calls" title="Later day with calls">›</button>
+    </div>
+    <div class="day-meta" id="dayMeta"></div>
+    <div class="day-tools">
+      <button class="tool-btn tool-p" onclick="openFetch()" title="Pull this day's calls from the CRM, then transcribe and audit them">＋ Fetch calls</button>
+      <button class="tool-btn" id="creBtn" onclick="showCrePerformance()">CRE performance</button>
+      <a class="tool-btn" href="/audited" title="Every audited call, with scores">Audited calls</a>
+      <a class="tool-btn" href="/not-audited" title="A day's calls not audited yet, by CRE and call type">Not audited</a>
+      <a class="tool-btn" href="/failed" title="Calls whose transcription or audit failed">Failed</a>
+      <a class="tool-btn" href="/fake-bookings" title="Booking calls judged not genuine">Fake bookings</a>
+      <button class="tool-btn" onclick="exportDay()" title="Download this day's audits as Excel">Export</button>
+    </div>
+  </header>
+  <div class="fetch-status" id="fetchStatus" role="status" aria-live="polite" hidden></div>
+  <section class="list-view" id="listView">
+    <div class="filters">
+      <input id="fSearch" type="search" placeholder="Search registration" aria-label="Search registration" oninput="applyFilters()">
+      <input id="fCre" type="search" placeholder="CRE code or name" aria-label="CRE" oninput="applyFilters()" autocomplete="off">
+      <input id="fWorkshop" type="search" placeholder="Workshop" aria-label="Workshop" oninput="applyFilters()" autocomplete="off">
+      <select id="fScore" aria-label="Audit status" onchange="applyFilters()">
+        <option value="">Any status</option>
+        <option value="audited">Audited</option>
+        <option value="not_audited">Not audited yet</option>
+        <option value="hi">Good · 75+</option>
+        <option value="mid">Average · 60–74</option>
+        <option value="lo">Below 60</option>
+      </select>
+      <select id="fLength" aria-label="Call length" onchange="applyFilters()" title="Call length, from the phone system">
+        <option value="">Any length</option>
+        <option value="10-">10 s or longer</option>
+        <option value="20-">20 s or longer</option>
+        <option value="30-">30 s or longer</option>
+        <option value="60-">1 min or longer</option>
+        <option value="-10">Under 10 s</option>
+        <option value="-30">Under 30 s</option>
+      </select>
+      <select id="fCampaign" aria-label="Campaign" onchange="applyFilters()" title="CRM campaign">
+        <option value="">All campaigns</option>
+      </select>
+      <select id="fDisposition" aria-label="Disposition" onchange="applyFilters()" title="The CRE's outcome in the CRM, e.g. Booking confirmed">
+        <option value="">All dispositions</option>
+      </select>
+      <button class="tool-btn" onclick="clearFilters()" title="Clear filters">Clear filters</button>
+    </div>
+    <div class="select-bar" id="selectBar" hidden></div>
+    <div class="file-list" id="fileList">
+      <div style="padding:14px;color:var(--t3);font-size:12px">Loading…</div>
+    </div>
+    <div class="batch-bar" id="batchBar">
+      <span class="batch-count" id="batchCount">0 selected</span>
+      <button class="batch-run-btn" id="batchRunBtn" onclick="runBatch()" disabled title="Download, transcribe and audit the selected calls">▶ Run</button>
+      <div class="batch-progress" id="batchProgress" role="status" aria-live="polite" style="display:none"></div>
+    </div>
+  </section>
+  <main class="main" id="mainPanel" hidden></main>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+const S = {
+  calls:[], sel:null, job:null, jobType:null, poll:null, txOpen:false,
+  showTips: (() => { try { return localStorage.getItem("katariaShowTips") === "1"; } catch { return false; } })(),
+  txRuntime: null,
+  batchSel: new Set(),
+  batchRunning: false,
+  batchWatch: null,
+  renderEpoch: 0,
+  callsRequest: 0,
+  engineStatus: "idle",
+  enginePoll: null,
+  day: null,            // "YYYY-MM-DD" shown in the list
+  dayData: null,        // that day's CRM calls: counts per type and per CRE, loaded pages per CRE
+  dayRequest: 0,
+  dayCache: new Map(),  // filter query -> {at, data}: revisited days show at once
+  filterTimer: null,
+  view: "day",          // main panel when no call is open: "day" | "cre"
+  selecting: null,      // "ALL" or a call type while "Select" fetches its call ids
+  creSort: { key: "avg_score", dir: 1 },
+  fetchTimer: null,
+};
+
+// ── Scorecard sections (mirrors auditor SECTIONS constant) ───────────────────
+const SECTIONS = [
+  ["Opening",["greet","introduce","confirm_vehicle_name","inform_recording","reason_for_call","permission_to_talk"]],
+  ["Product & Service Knowledge",["prev_service_info","ask_kms","current_service_info","cost_estimate","warranty_info","pickup_drop","booking_details"]],
+  ["Customer Handling",["listen_understand","dissatisfaction_inquiry","info_gathering","reason_snr","professionalism","conflict_mgmt","higher_billing"]],
+  ["Software / CRM",["dms_validation","remarks_tagging","proper_tagging","task_crm"]],
+  ["Closing",["future_service","standard_comm","thank_you"]],
+];
+const PL = {
+  greet:"Clear opening greeting",introduce:"CRE introduction & dealership name",
+  confirm_vehicle_name:"Vehicle number & customer name confirmed",inform_recording:"Call recording disclosure",
+  reason_for_call:"Reason for call stated",permission_to_talk:"Permission to talk",
+  prev_service_info:"Previous service information",ask_kms:"Current KMS asked",
+  current_service_info:"Current service info (tenure / mileage)",cost_estimate:"Cost estimate provided",
+  warranty_info:"OEM / EW / MCP warranty pitched",pickup_drop:"Free pick & drop offered",
+  booking_details:"Booking date, time and address confirmed",listen_understand:"Customer need listened & understood",
+  dissatisfaction_inquiry:"Dissatisfaction inquiry",info_gathering:"Information gathering & solution offered",
+  reason_snr:"Reason for SNR captured",professionalism:"Professionalism & demeanor",
+  conflict_mgmt:"Conflict management",higher_billing:"Higher billing explained",
+  dms_validation:"DMS validation",remarks_tagging:"Customer & CRE remarks entered",
+  proper_tagging:"Proper tagging applied",task_crm:"CRM task managed correctly",
+  future_service:"Future service follow-up",standard_comm:"Communication per standards",
+  thank_you:"Professional thank-you close",
+};
+const WEIGHTS = {
+  BOOKING:{greet:2,introduce:2,confirm_vehicle_name:4,inform_recording:4,reason_for_call:4,permission_to_talk:2,prev_service_info:5,ask_kms:5,current_service_info:5,cost_estimate:6,warranty_info:6,pickup_drop:6,booking_details:6,listen_understand:6,info_gathering:6,professionalism:14,conflict_mgmt:5,dms_validation:4,remarks_tagging:4,standard_comm:2,thank_you:2},
+  FOLLOW_UPS:{greet:2,introduce:2,confirm_vehicle_name:4,inform_recording:4,reason_for_call:4,permission_to_talk:2,prev_service_info:8,ask_kms:8,current_service_info:10,cost_estimate:6,warranty_info:6,pickup_drop:6,professionalism:14,remarks_tagging:6,standard_comm:2,proper_tagging:6,task_crm:8,thank_you:2},
+  SERVICE_NT_REQUIRED:{greet:2,introduce:2,confirm_vehicle_name:2,inform_recording:4,reason_for_call:4,permission_to_talk:2,prev_service_info:5,ask_kms:5,current_service_info:5,cost_estimate:5,warranty_info:6,listen_understand:6,reason_snr:8,professionalism:10,conflict_mgmt:5,dms_validation:8,remarks_tagging:5,standard_comm:2,future_service:8,proper_tagging:4,thank_you:2},
+  ESCALATION:{greet:2,introduce:2,confirm_vehicle_name:2,inform_recording:4,reason_for_call:4,permission_to_talk:2,prev_service_info:5,ask_kms:5,current_service_info:5,cost_estimate:6,warranty_info:6,listen_understand:6,dissatisfaction_inquiry:4,professionalism:10,conflict_mgmt:10,dms_validation:4,remarks_tagging:5,standard_comm:2,higher_billing:4,future_service:5,proper_tagging:5,thank_you:2},
+};
+
+// ── API ──────────────────────────────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = { method, cache:"no-store", headers:{"Content-Type":"application/json"} };
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    const response = await fetch(path, opts);
+    let payload;
+    try { payload = await response.json(); }
+    catch { payload = { error: `Invalid server response (${response.status})` }; }
+    if (!response.ok && !payload.error) payload.error = `Request failed (${response.status})`;
+    return payload;
+  } catch {
+    return { error: "Network error — reconnecting may be required" };
+  }
+}
+
+// ── CUDA badge ───────────────────────────────────────────────────────────────
+async function fetchCuda() {
+  const r = await api("GET", "/api/cuda");
+  const el = document.getElementById("cudaBadge");
+  if (!el) return;
+  if (r.cuda) {
+    const label = r.device ? r.device.replace(/NVIDIA\s*/i,"").split(" ").slice(0,2).join(" ") : "CUDA";
+    el.className = "cuda-pill cuda-on";
+    el.innerHTML = `<span class="cuda-dot"></span>GPU ${x(label)}`;
+  } else {
+    el.className = "cuda-pill cuda-off";
+    el.innerHTML = `<span class="cuda-dot"></span>CPU only`;
+  }
+}
+
+// ── Load calls ───────────────────────────────────────────────────────────────
+// Recordings already in data/ (downloaded, transcribed, audited): the CRE scores.
+// The day's CREs and their call counts come from the CRM database through /api/day.
+async function loadCalls() {
+  const requestId = ++S.callsRequest;
+  const calls = await api("GET", "/api/calls");
+  if (requestId !== S.callsRequest) return false;
+  if (!Array.isArray(calls)) {
+    if (calls?.error) showError(`Could not refresh recordings: ${calls.error}`);
+    return false;
+  }
+  S.calls = calls;
+  if (S.sel) S.sel = calls.find(c => c.stem === S.sel.stem) || S.sel;
+  renderList();
+  return true;
+}
+
+// ── Day list: one day's connected CRM calls ──────────────────────────────────
+const CALL_TYPES = ["BOOKING","FOLLOW_UPS","SERVICE_NT_REQUIRED","ESCALATION"];
+const CALL_TYPE_LABELS = {BOOKING:"Booking",ESCALATION:"Escalation",SERVICE_NT_REQUIRED:"Service Not Required",FOLLOW_UPS:"Follow Up",UNKNOWN:"Other",LOCAL:"Other recordings"};
+
+function isoDay(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function todayIso() { return isoDay(new Date()); }
+function yesterdayIso() { const d = new Date(); d.setDate(d.getDate()-1); return isoDay(d); }
+function dayLabel(day) {
+  const d = new Date(`${day}T00:00:00`);
+  return isNaN(d) ? String(day) : d.toLocaleDateString("en-IN", {weekday:"short", day:"numeric", month:"short", year:"numeric"});
+}
+
+// The server lists only one lead type (DASHBOARD_LEAD_TYPE, Unnati); /api/day says which.
+const LEAD_LABELS = { UNNATI: "Unnati", PRAGATI: "Pragati" };
+function leadLabel() { const lt = S.dayData?.leadType; return lt ? `${LEAD_LABELS[lt] || lt} ` : ""; }
+
+function filterParams() {
+  const val = id => (document.getElementById(id)?.value || "").trim();
+  const p = new URLSearchParams({ date: S.day });
+  if (val("fSearch")) p.set("registration", val("fSearch"));
+  if (val("fCre")) p.set("cre", val("fCre"));
+  if (val("fWorkshop")) p.set("station", val("fWorkshop"));
+  if (val("fScore")) p.set("status", val("fScore"));
+  setLength(p, val("fLength"));
+  if (val("fCampaign")) p.set("campaign", val("fCampaign"));
+  if (val("fDisposition")) p.set("disposition", val("fDisposition"));
+  return p;
+}
+// CRE outcomes (lead_transaction.status) in words; others are shown as written in the CRM.
+const DISPOSITION_LABELS = { BOOKED: "Booked", BOOKED_CONFIRMED: "Booking confirmed", FOLLOW_UP: "Follow-up",
+  BOOKED_FOLLOW_UP: "Booked follow-up", NOT_REQUIRED: "Service not required", ESCALATION: "Escalation" };
+function dispositionLabel(id) {
+  return DISPOSITION_LABELS[id] || String(id || "").toLowerCase().replace(/_/g, " ").replace(/^./, c => c.toUpperCase());
+}
+function renderDispositions(list) {
+  const sel = document.getElementById("fDisposition");
+  if (!sel || !list) return;
+  const current = sel.value;
+  sel.innerHTML = `<option value="">All dispositions</option>` +
+    list.map(d => `<option value="${x(d.id)}">${x(dispositionLabel(d.id))} · ${Number(d.n).toLocaleString("en-IN")}</option>`).join("") +
+    (current && !list.some(d => d.id === current) ? `<option value="${x(current)}">${x(dispositionLabel(current))} · 0</option>` : "");
+  sel.value = current;
+}
+// Campaign choices: the day's campaigns with their call counts (from /api/day); a chosen one stays listed.
+function renderCampaigns(list) {
+  const sel = document.getElementById("fCampaign");
+  if (!sel || !list) return;
+  const current = sel.value;
+  const known = list.some(c => c.id === current);
+  sel.innerHTML = `<option value="">All campaigns</option>` +
+    list.map(c => `<option value="${x(c.id)}">${x(c.name)} · ${Number(c.n).toLocaleString("en-IN")}</option>`).join("") +
+    (current && !known ? `<option value="${x(current)}">Chosen campaign · 0</option>` : "");
+  sel.value = current;
+}
+// "10-" = 10 s or longer, "-30" = under 30 s (seconds, from bizRTC's call duration).
+function setLength(p, value) {
+  const [min, max] = String(value || "").split("-");
+  if (min) p.set("min_seconds", min);
+  if (max) p.set("max_seconds", max);
+}
+const FILTER_IDS = ["fSearch","fCre","fWorkshop","fScore","fLength","fCampaign","fDisposition"];
+function filtersActive() {
+  return FILTER_IDS.some(id => (document.getElementById(id)?.value || "").trim());
+}
+
+// The day's CREs with their call counts per call type.
+async function loadDay() {
+  const requestId = ++S.dayRequest;
+  const key = filterParams().toString();
+  const cached = S.dayCache.get(key);
+  // A day seen in the last few minutes shows at once; fresh data replaces it when it arrives.
+  S.dayData = cached && Date.now() - cached.at < 300000
+    ? structuredClone(cached.data)
+    : { date: S.day, loading: true, counts: {}, cres: [], localOnly: [], db: true, error: null };
+  if (S.dayData.campaigns) renderCampaigns(S.dayData.campaigns);
+  if (S.dayData.dispositions) renderDispositions(S.dayData.dispositions);
+  renderList();
+  const r = await api("GET", `/api/day?${filterParams()}`);
+  if (requestId !== S.dayRequest) return;
+  if (r.error) {
+    S.dayData = { ...S.dayData, loading: false, error: r.error };
+    renderList();
+    return;
+  }
+  S.dayData = { date: r.date, db: r.db, leadType: r.lead_type || null, counts: r.counts || {}, cres: r.cres || [],
+                campaigns: r.campaigns || [], dispositions: r.dispositions || [],
+                localOnly: r.local_only || [], loading: false, error: null };
+  renderCampaigns(S.dayData.campaigns);
+  renderDispositions(S.dayData.dispositions);
+  S.dayCache.set(key, { at: Date.now(), data: structuredClone(S.dayData) });
+  if (S.dayCache.size > 40) S.dayCache.delete(S.dayCache.keys().next().value);
+  renderList();
+}
+
+function setDay(day) {
+  if (!day || day === S.day || day > todayIso()) { updateDayBar(); return; }
+  S.day = day;
+  try { sessionStorage.setItem("dashDay", day); } catch {}
+  if (S.sel && !S.job) S.sel = null;
+  S.batchSel.clear();
+  updateBatchBar();
+  if (!S.sel) renderDayView();
+  loadDay();
+}
+
+// step 1 = one day earlier, -1 = one day later.
+function shiftDay(step) {
+  const d = new Date(`${S.day}T00:00:00`);
+  d.setDate(d.getDate() - step);
+  setDay(isoDay(d));
+}
+
+function dayTotals() {
+  const d = S.dayData || {};
+  const local = S.calls.filter(c => c.call_date === S.day);
+  return {
+    calls: Object.values(d.counts || {}).reduce((n, v) => n + v, 0) + (d.localOnly || []).length,
+    downloaded: local.length,
+    audited: local.filter(c => c.has_report).length,
+  };
+}
+
+function updateDayBar() {
+  const pick = document.getElementById("dayPick");
+  if (pick) { pick.value = S.day || ""; pick.max = todayIso(); }
+  const next = document.getElementById("dayNext");
+  if (next) next.disabled = !S.day || S.day >= todayIso();
+  const meta = document.getElementById("dayMeta");
+  if (!meta) return;
+  const d = S.dayData;
+  const label = `<a href="#" onclick="showDayView();return false" title="Day overview"><b>${x(dayLabel(S.day))}</b></a>`;
+  if (!d || d.loading) { meta.innerHTML = `${label} · loading…`; return; }
+  const t = dayTotals();
+  meta.innerHTML = d.db === false
+    ? `${label} · CRM database not connected`
+    : `${label} · ${t.calls.toLocaleString("en-IN")} connected ${x(leadLabel())}call${t.calls === 1 ? "" : "s"} · ${t.audited} audited`;
+}
+
+// ── Filters (applied by the server) ──────────────────────────────────────────
+// Filters stay while moving between pages in this tab; refreshing the page clears them.
+function saveDashFilters() {
+  const state = {};
+  FILTER_IDS.forEach(id => { state[id] = document.getElementById(id)?.value || ""; });
+  try { sessionStorage.setItem("dashFilters", JSON.stringify(state)); } catch {}
+}
+function restoreDashFilters() {
+  let state = null;
+  try {
+    if (performance.getEntriesByType("navigation")[0]?.type === "reload") sessionStorage.removeItem("dashFilters");
+    else state = JSON.parse(sessionStorage.getItem("dashFilters") || "null");
+  } catch {}
+  if (!state) return;
+  const camp = document.getElementById("fCampaign");  // campaign options arrive with the day's data
+  if (camp && state.fCampaign && ![...camp.options].some(o => o.value === state.fCampaign)) camp.add(new Option("Chosen campaign", state.fCampaign));
+  const disp = document.getElementById("fDisposition");
+  if (disp && state.fDisposition && ![...disp.options].some(o => o.value === state.fDisposition)) disp.add(new Option(dispositionLabel(state.fDisposition), state.fDisposition));
+  FILTER_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && typeof state[id] === "string") { el.value = state[id]; el.classList.toggle("f-active", !!state[id].trim()); }
+  });
+}
+
+function applyFilters() {
+  saveDashFilters();
+  FILTER_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle("f-active", !!el.value.trim());
+  });
+  clearTimeout(S.filterTimer);
+  S.filterTimer = setTimeout(() => { S.batchSel.clear(); updateBatchBar(); loadDay(); }, 350);
+}
+
+function clearFilters() {
+  FILTER_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+  applyFilters();
+}
+
+// ── CRE list: each CRE's calls and audit scores for the day ─────────────────
+const TYPE_SHORT = {BOOKING:"Booking",FOLLOW_UPS:"Follow-up",SERVICE_NT_REQUIRED:"SNR",ESCALATION:"Escalation",UNKNOWN:"Other"};
+
+// Average score per call type and overall, from this day's audited recordings in data/.
+function creScores(code) {
+  const scores = { all: [], types: {} };
+  for (const c of S.calls) {
+    if (c.call_date !== S.day || !c.has_report || c.score_pct == null || !code || c.cre_code !== code) continue;
+    scores.all.push(c.score_pct);
+    (scores.types[c.call_type] ||= []).push(c.score_pct);
+  }
+  return scores;
+}
+
+function scoreCell(values, total) {
+  if (!total) return `<td class="num"><span class="cre-code">—</span></td>`;
+  const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+  return `<td class="num">${avg == null ? `<span class="cre-code">—</span>` : `<span class="chip ${pctClass(avg)}">${Math.round(avg)}%</span>`}
+    <div class="cre-code">${values.length}/${total.toLocaleString("en-IN")} audited</div></td>`;
+}
+
+function creRow(c, types) {
+  const s = creScores(c.code);
+  const left = c.total - s.all.length;
+  const idJ = x(JSON.stringify(c.id)), nameJ = x(JSON.stringify(c.name || c.code || "this CRE"));
+  const action = !s.all.length
+    ? `<button class="btn btn-p btn-sm" onclick="auditCre(${idJ},${nameJ})">Audit CRE</button>`
+    : left > 0 ? `<button class="btn btn-s btn-sm" onclick="auditCre(${idJ},${nameJ})">Audit ${left.toLocaleString("en-IN")} more</button>` : "";
+  return `<tr>
+    <td>${c.id === "none" ? `<div class="cre-name">No CRE assigned</div>`
+      : `<div class="cre-name">${x(c.name || c.code || "Unknown CRE")}</div>${c.code && c.name ? `<div class="cre-code">${x(c.code)}</div>` : ""}`}</td>
+    ${types.map(t => scoreCell(s.types[t] || [], c.counts[t] || 0)).join("")}
+    ${scoreCell(s.all, c.total)}
+    <td class="num">${action}</td>
+  </tr>`;
+}
+
+// Downloads, transcribes and audits the CRE's calls of the day that aren't audited yet.
+async function auditCre(creId, name) {
+  const p = filterParams();
+  p.set("ids_only", "1");
+  p.set("cre_id", creId);
+  p.set("status", "not_audited");
+  const r = await api("GET", `/api/day?${p}`);
+  if (r.error) { showError(`Could not list ${name}'s calls: ${r.error}`); return; }
+  const ids = r.ids || [];
+  if (!ids.length) { showError(`${name} has no calls left to audit on ${dayLabel(S.day)}.`); return; }
+  const minutes = Math.ceil(ids.length * 12 / 60);  // ~12 s a call
+  const ok = await showConfirm(`Audit ${name}?`,
+    `${ids.length.toLocaleString("en-IN")} call${ids.length === 1 ? "" : "s"} not audited yet on ${dayLabel(S.day)}: downloaded, transcribed and audited one after another, roughly ${
+      minutes >= 60 ? `${(minutes / 60).toFixed(1)} hours` : `${minutes} minutes`}.`, "Audit", "Cancel");
+  if (ok) await startFetch({ date: S.day, transaction_ids: ids, reaudit: false });
+}
+
+// "Select" row: every call of the day (or one call type) that matches the filters,
+// loaded or not. The ids come from the server; only CRM calls, not "Other recordings".
+function renderSelectBar() {
+  const bar = document.getElementById("selectBar");
+  if (!bar) return;
+  const d = S.dayData;
+  const total = Object.values(d?.counts || {}).reduce((n, v) => n + v, 0);
+  bar.hidden = !d || d.loading || !!d.error || !total;
+  if (bar.hidden) return;
+  const busy = S.selecting != null;
+  const btn = (type, label, n) => `<button class="tool-btn" ${busy ? "disabled" : ""} onclick="selectCalls(${type ? `'${type}'` : "null"})">${
+    S.selecting === (type || "ALL") ? "Selecting…" : `${label} · ${n.toLocaleString("en-IN")}`}</button>`;
+  bar.innerHTML = `<span class="sb-label">Select</span>${btn(null, "All", total)}${
+    CALL_TYPES.filter(t => d.counts[t]).map(t => btn(t, TYPE_SHORT[t], d.counts[t])).join("")}${
+    S.batchSel.size ? `<button class="tool-btn" onclick="clearSelection()">Clear</button>` : ""}`;
+}
+
+async function selectCalls(type) {
+  const requestId = S.dayRequest;
+  const p = filterParams();
+  p.set("ids_only", "1");
+  if (type) p.set("call_type", type);
+  S.selecting = type || "ALL";
+  renderSelectBar();
+  const r = await api("GET", `/api/day?${p}`);
+  S.selecting = null;
+  if (requestId !== S.dayRequest) { renderSelectBar(); return; }  // the day or filters changed meanwhile
+  if (r.error) { showError(`Could not select calls: ${r.error}`); renderSelectBar(); return; }
+  (r.ids || []).forEach(id => S.batchSel.add(id));
+  updateBatchBar();
+  renderList();
+}
+
+function clearSelection() {
+  S.batchSel.clear();
+  updateBatchBar();
+  renderList();
+}
+
+function renderList() {
+  const el = document.getElementById("fileList");
+  if (!el) return;
+  updateDayBar();
+  renderSelectBar();
+  const d = S.dayData;
+  if (!d || d.loading) {
+    el.innerHTML = `<div class="list-note"><span class="spin" style="display:inline-block;vertical-align:middle;margin-right:6px"></span>Loading ${x(dayLabel(S.day))}…</div>`;
+    return;
+  }
+  if (d.error) {
+    el.innerHTML = `<div class="list-note" style="color:var(--red)">Could not load calls: ${x(d.error)}<br><button class="tool-btn" onclick="loadDay()">Try again</button></div>`;
+    return;
+  }
+  const scrollTop = el.scrollTop;
+  const cres = d.cres || [];
+  if (!cres.length) {
+    el.innerHTML = d.db === false
+      ? `<div class="list-note">The CRM database isn't connected (VPN / DB settings), so the day's CREs can't be listed.</div>`
+      : filtersActive()
+        ? `<div class="list-note">No connected calls on this day match the filters.<br><button class="tool-btn" onclick="clearFilters()">Clear filters</button></div>`
+        : `<div class="list-note">No connected calls on ${x(dayLabel(S.day))}.</div>`;
+    return;
+  }
+  const types = CALL_TYPES.filter(t => d.counts[t]);
+  el.innerHTML = `<div class="card"><table class="cre-table cre-day">
+    <thead><tr><th>CRE</th>${types.map(t => `<th class="num">${TYPE_SHORT[t]}</th>`).join("")}<th class="num">Overall</th><th></th></tr></thead>
+    <tbody>${cres.map(c => creRow(c, types)).join("")}</tbody></table></div>`;
+  el.scrollTop = scrollTop;
+}
+
+// ── Recording player ─────────────────────────────────────────────────────────
+// One <audio> outside the page DOM, so re-rendering the call page never stops playback.
+const AUD = new Audio();
+AUD.preload = "metadata";
+try { const v = parseFloat(localStorage.getItem("katariaVolume")); if (v >= 0 && v <= 1) AUD.volume = v; } catch {}
+let audStem = null, plDragging = false;
+const ICON = {
+  play:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`,
+  pause: `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>`,
+  vol:   `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>`,
+  mute:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor"/><path d="m22 9-6 6M16 9l6 6"/></svg>`,
+};
+
+function buildPlayer() {
+  return `<div class="card rv rv2" style="margin-top:14px">
+    <div class="ct">Recording</div>
+    <div class="pl">
+      <button class="pl-btn" id="plBtn" onclick="togglePlay()" aria-label="Play">${ICON.play}</button>
+      <span class="pl-time" id="plCur">0:00</span>
+      <input class="pl-range" id="plSeek" type="range" min="0" max="1000" value="0" aria-label="Timeline"
+             oninput="seekPreview(this.value)" onchange="seekTo(this.value)">
+      <span class="pl-time" id="plDur">--:--</span>
+      <div class="pl-vol">
+        <button class="pl-ic" id="plMute" onclick="toggleMute()" aria-label="Mute">${ICON.vol}</button>
+        <input class="pl-range" id="plVol" type="range" min="0" max="100" value="100" aria-label="Volume"
+               oninput="setVolume(this.value)">
+      </div>
+    </div>
+    <div class="pl-msg" id="plMsg" hidden>Recording could not be loaded.</div>
+  </div>`;
+}
+
+function loadRecording(stem) {
+  if (audStem === stem) return;
+  AUD.pause();
+  audStem = stem;
+  AUD.src = `/api/audio/${enc(stem)}`;
+}
+
+function fmtClock(s) {
+  if (!isFinite(s)) return "--:--";
+  s = Math.max(0, Math.floor(s));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
+function togglePlay() {
+  if (AUD.paused) AUD.play().catch(syncPlayer); else AUD.pause();
+}
+
+function seekPreview(v) {  // while dragging: move the thumb and time, seek on release
+  plDragging = true;
+  document.getElementById("plCur").textContent = fmtClock(v / 1000 * AUD.duration);
+  document.getElementById("plSeek").style.setProperty("--pct", `${v / 10}%`);
+}
+
+function seekTo(v) {
+  plDragging = false;
+  if (isFinite(AUD.duration)) AUD.currentTime = v / 1000 * AUD.duration;
+}
+
+function setVolume(v) {
+  AUD.volume = v / 100;
+  AUD.muted = Number(v) === 0;
+  try { localStorage.setItem("katariaVolume", String(AUD.volume)); } catch {}
+}
+
+function toggleMute() {
+  if (AUD.muted || AUD.volume === 0) { AUD.muted = false; if (AUD.volume === 0) AUD.volume = 0.5; }
+  else AUD.muted = true;
+}
+
+function syncPlayer() {
+  const btn = document.getElementById("plBtn");
+  if (!btn) return;
+  const d = AUD.duration, t = AUD.currentTime, failed = !!AUD.error;
+  btn.innerHTML = AUD.paused ? ICON.play : ICON.pause;
+  btn.setAttribute("aria-label", AUD.paused ? "Play" : "Pause");
+  btn.disabled = failed;
+  document.getElementById("plDur").textContent = fmtClock(d);
+  if (!plDragging) {
+    const pct = isFinite(d) && d > 0 ? t / d * 100 : 0;
+    const seek = document.getElementById("plSeek");
+    seek.value = Math.round(pct * 10);
+    seek.style.setProperty("--pct", `${pct}%`);
+    document.getElementById("plCur").textContent = fmtClock(t);
+  }
+  const vol = AUD.muted ? 0 : AUD.volume;
+  const volEl = document.getElementById("plVol");
+  volEl.value = Math.round(vol * 100);
+  volEl.style.setProperty("--pct", `${vol * 100}%`);
+  document.getElementById("plMute").innerHTML = vol === 0 ? ICON.mute : ICON.vol;
+  document.getElementById("plMute").setAttribute("aria-label", vol === 0 ? "Unmute" : "Mute");
+  document.getElementById("plMsg").hidden = !failed;
+}
+
+["loadedmetadata", "durationchange", "timeupdate", "play", "pause", "ended", "volumechange", "error", "emptied"]
+  .forEach(ev => AUD.addEventListener(ev, syncPlayer));
+
+function showConfirm(title, message, confirmLabel, cancelLabel) {
+  return new Promise(resolve => {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <div class="modal-title">${x(title)}</div>
+        <div class="modal-msg">${x(message)}</div>
+        <div class="modal-acts">
+          <button class="btn btn-s" id="modalCancel">${x(cancelLabel)}</button>
+          <button class="btn btn-p" id="modalConfirm">${x(confirmLabel)}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add("modal-in"));
+    const close = val => { overlay.classList.remove("modal-in"); setTimeout(() => overlay.remove(), 200); resolve(val); };
+    overlay.querySelector("#modalConfirm").onclick = () => close(true);
+    overlay.querySelector("#modalCancel").onclick  = () => close(false);
+    overlay.addEventListener("click", e => { if (e.target === overlay) close(false); });
+  });
+}
+
+async function renderMain() {
+  const panel = document.getElementById("mainPanel");
+  if (!S.sel) return;
+  showPanel("main");
+  const selectedStem = S.sel.stem;
+  const epoch = ++S.renderEpoch;
+  panel.innerHTML = `${BACK_BTN}<div style="color:var(--t3);font-size:12px;padding:4px">Loading…</div>`;
+  try {
+    const [crmR, txR, rptR] = await Promise.all([
+      S.sel.has_crm ? api("GET",`/api/crm/${enc(S.sel.stem)}`) : Promise.resolve(null),
+      S.sel.has_transcript ? api("GET",`/api/transcript/${enc(S.sel.stem)}`) : Promise.resolve(null),
+      S.sel.has_report ? api("GET",`/api/report/${enc(S.sel.stem)}`) : Promise.resolve(null),
+    ]);
+    if (epoch !== S.renderEpoch || S.sel?.stem !== selectedStem) return;
+    const crm = crmR && !crmR.error ? crmR : null;
+    const tx  = txR  && !txR.error  ? txR.text : null;
+    const rpt = rptR && !rptR.error ? rptR : null;
+
+    panel.innerHTML = buildMain(S.sel, crm, tx, rpt, rpt?.audit_result?.llm_runtimes || null);
+    loadRecording(selectedStem);
+    syncPlayer();
+
+    // Restore transcript open state
+    if (S.txOpen) {
+      const p = document.getElementById("txPanel");
+      if (p) p.classList.add("open");
+    }
+  } catch(err) {
+    panel.innerHTML = `${BACK_BTN}<div style="padding:20px;color:var(--red);font-size:13px">
+      Error loading call: ${x(String(err))}<br>
+      <span style="color:var(--t3);font-size:11px">Open browser console for details</span>
+    </div>`;
+    console.error("renderMain error:", err);
+  }
+}
+
+// ── Build main HTML ──────────────────────────────────────────────────────────
+function buildMain(call, crm, tx, rpt, runtimes) {
+  const p = [BACK_BTN];
+  p.push(`<div class="sl rv rv1">Call Information</div>`);
+  p.push(buildCRMCard(call, crm));
+  p.push(buildActions(call, tx, runtimes));
+  p.push(buildPlayer());
+
+  // Transcript panel (hidden by default, toggled by button)
+  if (tx) {
+    p.push(`<div class="tx-panel${S.txOpen?" open":""}" id="txPanel">`);
+    p.push(`<div class="tx-inner">${formatTranscript(tx)}</div>`);
+    p.push(`</div>`);
+  }
+
+  if (rpt) p.push(buildReport(rpt));
+  return p.join("");
+}
+
+function buildCRMCard(call, crm) {
+  const root = (crm?.data && typeof crm.data === "object") ? crm.data : (crm || {});
+  const s = v => Array.isArray(v) ? (v[0] || "—") : (v != null && v !== "" ? String(v) : "—");
+  const schema = root.schema_version || "";
+
+  // Audit schemas: crm-excel-v1 / crm-excel-v2 / crm-merged-v1
+  const isAudit = ["crm-excel-v1","crm-excel-v2","crm-merged-v1"].includes(schema);
+
+  let custName, model, regNo, oem, ew, mcp, callType, nsdCtx, creeName, creId;
+
+  if (isAudit) {
+    const cu = root.customer || {};
+    const vh = root.vehicle  || {};
+    const sp = root.service_profile || {};
+    const cre = root.cre || {};
+    custName = s(cu.name);
+    model    = s(vh.model);
+    regNo    = s(vh.registration_number);
+    oem      = s(sp.oem_status);
+    ew       = s(sp.ew_status_or_expiry);
+    mcp      = s(sp.mcp_status);
+    callType = s(root.audit_call_type);
+    nsdCtx   = s(vh.nsd_context);
+    creeName = s(cre.name);
+    creId    = s(cre.employee_id || cre.username);
+  } else {
+    // Raw API JSON schema
+    const cu = root.customerDetails || {};
+    const vh = root.vehicleDetails  || {};
+    const ld = root.lead || {};
+    custName = s(cu.name) !== "—" ? s(cu.name) : s(ld.customerName);
+    model    = s(vh.variant) !== "—" ? s(vh.variant) : s(ld.model);
+    regNo    = s(vh.registrationNumber) !== "—" ? s(vh.registrationNumber) : s(ld.registrationNumber);
+    oem      = s(vh.oemStatus);
+    const ewType = s(vh.extWarrantyType); const ewDate = s(vh.ewDate) !== "—" ? s(vh.ewDate) : s(vh.extendedWarrantyDue);
+    ew       = [ewType,ewDate].filter(v=>v&&v!=="—").join(" - ") || "—";
+    mcp      = s(vh.mcpStatusDate) !== "—" ? s(vh.mcpStatus)+" - "+s(vh.mcpStatusDate) : s(vh.mcpStatus);
+    callType = null; nsdCtx = null; creeName = null; creId = null;
+  }
+
+  // Warranty pill — green=ACTIVE, red=INACTIVE/EXPIRED, grey=unknown
+  const wPill = (label, val) => {
+    const blank = !val || val === "—";
+    const up = (val||"").toUpperCase();
+    const isInactive = !blank && (up.includes("INACTIVE") || up.includes("EXPIRED") || up === "NA" || up === "NO" || up === "NONE");
+    const isActive   = !blank && !isInactive && (up === "ACTIVE" || up.startsWith("ACTIVE ") || up.startsWith("ACTIVE-") || /^\d{2}-\d{2}-\d{4}/.test(val));
+    const cls = blank ? "chip chip-n" : isActive ? "chip chip-g" : isInactive ? "chip chip-r" : "chip chip-n";
+    return `<div class="crm-wpill">
+      <div class="il">${label}</div>
+      <span class="${cls}">${x(blank ? "—" : val)}</span>
+    </div>`;
+  };
+
+  const extraRow = isAudit ? `
+    <div class="ig" style="margin-bottom:10px">
+      ${callType && callType!=="—" ? `<div><div class="il">Call Type</div><div class="iv">${x(callType)}</div></div>` : ""}
+      ${creeName && creeName!=="—" ? `<div><div class="il">CRE</div><div class="iv">${x(creeName)}${creId && creId!=="—" ? ` <span style="font-size:11px;color:var(--t2);font-family:ui-monospace,'SF Mono',monospace">(${x(creId)})</span>` : ""}</div></div>` : ""}
+    </div>
+    ${nsdCtx && nsdCtx!=="—" ? `<div style="font-size:11.5px;color:var(--t2);margin-bottom:10px">📋 ${x(nsdCtx)}</div>` : ""}
+  ` : "";
+
+  return `<div class="card rv rv1">
+    <div class="ct">CRM Overview</div>
+    <div class="crm-row">
+      <div class="crm-field crm-name"><div class="il">Customer</div><div class="crm-val-lg">${x(custName)}</div></div>
+      <div class="crm-field"><div class="il">Model</div><div class="crm-val-lg">${x(model)}</div></div>
+      <div class="crm-field"><div class="il">Registration</div>
+        <div class="crm-val-lg" style="font-family:ui-monospace,'SF Mono',monospace;letter-spacing:0.04em">${x(regNo)}</div>
+      </div>
+    </div>
+    <div class="div" style="margin:12px 0 10px"></div>
+    ${extraRow}
+    <div class="crm-warranty">
+      ${wPill("OEM", oem)}
+      ${wPill("EW", ew)}
+      ${wPill("MCP", mcp)}
+    </div>
+  </div>`;
+}
+
+function buildRunPanel(runtimes) {
+  const isAuRunning = S.job && S.jobType === "audit";
+  // Recorded by the server: the transcription job, the audit job (Run Audit ->
+  // result saved in Excel) and, inside the audit, each model's LLM time.
+  const rt = runtimes || {};
+  const tx = rt.transcription, audit = rt.single_pass;
+  const stock = rt.stock_llm, tuned = rt.finetuned_llm;
+  const other = audit != null ? Math.max(0, audit - (stock || 0) - (tuned || 0)) : null;
+  const total = tx != null || audit != null ? (tx || 0) + (audit || 0) : null;
+  const val = (v, empty = "—") => v != null
+    ? `<span class="rt-done">${fmtRt(v)}</span>` : `<span class="rt-none">${empty}</span>`;
+  const row = (label, v, empty) => `<div class="rt-row"><span>${label}</span>${val(v, empty)}</div>`;
+  const totalText = isAuRunning ? `<span class="rt-running">running…</span>` : val(total);
+  return `<div class="llm-settings">
+    <div class="tog-row">
+      <div class="tog-info">
+        <div class="tog-label">Runtime</div>
+        ${row("Transcriber", tx)}
+        ${row("Audit · stock LLM", isAuRunning ? null : stock, isAuRunning ? "running…" : "—")}
+        ${row("Audit · fine-tuned LLM", isAuRunning ? null : tuned,
+              isAuRunning ? "running…" : (stock != null ? "not used" : "—"))}
+        ${other != null && other >= 0.1 && !isAuRunning ? row("Audit · rules &amp; saving", other) : ""}
+        <div class="rt-row rt-total"><span>⏱ Total runtime</span>${totalText}</div>
+      </div>
+    </div>
+    <div class="tog-row">
+      <div class="tog-info">
+        <div class="tog-label">Give suggestions</div>
+        <div class="tog-desc">Coaching tips for every parameter where the CRE lost points</div>
+      </div>
+      <label class="tog-wrap">
+        <input type="checkbox" ${S.showTips ? "checked" : ""} onchange="toggleTips(this.checked)">
+        <span class="tog-track"></span>
+      </label>
+    </div>
+  </div>`;
+}
+
+function toggleTips(on) {
+  S.showTips = on;
+  try { localStorage.setItem("katariaShowTips", on ? "1" : "0"); } catch {}
+  renderMain();
+}
+
+function buildActions(call, tx, runtimes) {
+  const busy = !!S.job;
+  let txBtn, auBtn, txToggle = "";
+
+  // Transcribe button
+  if (S.job && S.jobType === "transcribe") {
+    txBtn = `<button class="btn btn-p" disabled><span class="spin"></span>Transcribing… <span id="jobProgress" class="job-progress"></span></button>`;
+  } else {
+    txBtn = `<button class="btn btn-p" ${busy?"disabled":""} onclick="startTranscribe()">🎤 ${call.has_transcript?"Re-Transcribe":"Transcribe"}</button>`;
+  }
+
+  // Audit button / status
+  if (S.job && S.jobType === "audit") {
+    auBtn = `<span class="status-pill"><span class="spin spin-y"></span>Auditing… <span id="jobProgress" class="job-progress"></span></span>`;
+  } else {
+    const canAudit = call.has_transcript && !busy;
+    auBtn = `<button class="btn btn-s" ${canAudit?"":"disabled"} onclick="startAudit()">📊 ${call.has_report?"Re-Audit":"Run Audit"}</button>`;
+  }
+
+  // Show/Hide Transcript toggle — only if transcript exists
+  if (tx || call.has_transcript) {
+    const label = S.txOpen ? "Hide Transcript" : "Show Transcript";
+    txToggle = `<button class="btn btn-g" onclick="toggleTranscript()">📄 ${label}</button>`;
+  }
+
+  const llmPanel = buildRunPanel(runtimes);
+
+  return `<div class="card rv rv2" style="margin-top:14px">
+    <div class="ct">Actions</div>
+    <div class="acts-row">${txBtn}${auBtn}</div>
+    ${txToggle ? `<div class="acts-row">${txToggle}</div>` : ""}
+    ${llmPanel}
+  </div>`;
+}
+
+// ── Transcript toggle ─────────────────────────────────────────────────────────
+function toggleTranscript() {
+  S.txOpen = !S.txOpen;
+  const panel = document.getElementById("txPanel");
+  if (panel) {
+    panel.classList.toggle("open", S.txOpen);
+  }
+  // Update button label without full re-render
+  const btn = document.querySelector(".btn-g");
+  if (btn) btn.innerHTML = `📄 ${S.txOpen ? "Hide Transcript" : "Show Transcript"}`;
+}
+
+// ── Format transcript ─────────────────────────────────────────────────────────
+function formatTranscript(raw) {
+  if (!raw || !raw.trim()) return `<div class="tx-empty">No transcript content</div>`;
+
+  // Try diarized format: Agent [0.5s-3.2s]: text
+  const roleRe = /^(Agent|Customer)\s*\[([\d.]+)s-([\d.]+)s\]:\s*(.+)$/i;
+  const lines = raw.trim().split("\n");
+  const diarized = lines.map(l => l.trim()).filter(l=>l).map(l => {
+    const m = roleRe.exec(l);
+    if (m) return { role: m[1], start: m[2], end: m[3], text: m[4] };
+    return null;
+  });
+
+  const isDiarized = diarized.filter(Boolean).length > lines.filter(l=>l.trim()).length * 0.5;
+
+  if (isDiarized) {
+    return diarized.filter(Boolean).map((r, i) => {
+      const tid = "T" + String(i + 1).padStart(3, "0");
+      const isAgent = r.role.toLowerCase() === "agent";
+      const badgeCls = isAgent ? "tx-badge-agent" : "tx-badge-cust";
+      const roleLabel = isAgent ? "Agent" : "Customer";
+      const startSec = parseFloat(r.start);
+      const mins = Math.floor(startSec / 60);
+      const secs = (startSec % 60).toFixed(0).padStart(2,"0");
+      const timeLabel = mins > 0 ? `${mins}:${secs}` : `${secs}s`;
+      return `<div class="tx-row" id="turn-${tid}">
+        <div class="tx-meta">
+          <span class="tx-badge ${badgeCls}">${roleLabel}</span>
+          <div class="tx-time">${timeLabel}</div>
+          <div class="tx-tid">${tid}</div>
+        </div>
+        <div class="tx-text">${x(r.text)}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // Fallback: plain pre-formatted
+  return `<div class="tx-pre">${x(raw)}</div>`;
+}
+
+// ── Report rendering ─────────────────────────────────────────────────────────
+function buildReport(rpt) {
+  const p = [];
+  const sum = rpt.management_summary || {};
+  const res = rpt.audit_result || {};
+  const audit = res.audit || {};
+  const table = rpt.weight_table;
+
+  p.push(`<div class="sl rv rv4" style="margin-top:24px">Audit Scores</div>`);
+  const ev = rpt.evidence || {};
+  const nCheck = Object.values(ev.params || {}).filter(e => e.check).length + (ev.booking?.check ? 1 : 0);
+  p.push(buildScoreCard(sum, res, nCheck));
+  if (rpt.human_review) p.push(buildHumanReview(rpt.human_review, audit));
+  if (rpt.evidence?.booking) p.push(buildBookingCheck(rpt.evidence.booking));
+
+  if (table) {
+    p.push(`<div class="sl" style="margin-top:22px">Parameter Scores</div>`);
+    p.push(buildScorecard(audit, table, rpt.parameter_weights || null, rpt.parameter_score_options || null,
+                          rpt.evidence?.params || null));
+    if (S.showTips) p.push(buildCoaching(rpt));
+  }
+  return p.join("");
+}
+
+const TIPS = {
+  greet: "Open every call with a clear greeting (Namaste / Good morning / Kem cho) before anything else.",
+  introduce: "State your own name and that you are calling from Kataria Automobiles in the opening lines.",
+  confirm_vehicle_name: "Confirm both the customer's name and the vehicle registration number before discussing service.",
+  inform_recording: "Tell the customer early in the call that it is recorded for quality and training.",
+  reason_for_call: "State the purpose of the call (service due, follow-up, feedback) right after the introduction.",
+  permission_to_talk: "Ask whether this is a good time to talk before starting the conversation.",
+  prev_service_info: "Mention the vehicle's last service (date, type, workshop) from the CRM history.",
+  ask_kms: "Ask for the current odometer reading (KMs) and note the answer.",
+  current_service_info: "Explain which service is due and why, tied to the vehicle's age, KMs or service schedule.",
+  cost_estimate: "Give an approximate service cost when the customer asks or before booking.",
+  warranty_info: "Pitch the active OEM warranty / Extended Warranty / MCP and explain what it covers.",
+  pickup_drop: "Offer free pick-up and drop and explain how it works.",
+  booking_details: "Confirm all three: appointment date, time slot and workshop or pick-up address.",
+  listen_understand: "Acknowledge what the customer said and respond to that specific need, not a generic script.",
+  dissatisfaction_inquiry: "Ask what went wrong, how it affected the customer and what resolution they expect.",
+  info_gathering: "Ask questions to understand the customer's situation, then offer a solution that fits it.",
+  reason_snr: "Ask why service is not required and capture the exact reason (sold, serviced elsewhere, not due).",
+  professionalism: "Stay courteous and patient throughout: no interruptions, no pressure, clear and polite language.",
+  conflict_mgmt: "When the customer is upset: acknowledge, apologise, take ownership and give a clear next step.",
+  higher_billing: "Explain the bill difference item by item (parts, labour, extra work) in simple terms.",
+  dms_validation: "Check the customer's details and service history in DMS during the call.",
+  remarks_tagging: "Enter an accurate remark in CRM that reflects the call outcome and the next action.",
+  proper_tagging: "Tag the call with the disposition that matches what actually happened in the conversation.",
+  task_crm: "Complete the CRM task fully: follow-up date and reason, or the booking details.",
+  future_service: "Before closing, try to secure the next service visit or a follow-up commitment.",
+  standard_comm: "Follow the standard call structure and communication guidelines throughout.",
+  thank_you: "Close the call with a clear thank-you to the customer.",
+};
+
+function buildCoaching(rpt) {
+  const sum = rpt.management_summary || {};
+  const res = rpt.audit_result || {};
+  const audit = res.audit || {};
+  const options = rpt.parameter_score_options || {};
+  const weights = rpt.parameter_weights || {};
+  const fakeBooking = res.booking_genuine && res.booking_genuine.genuine === false;
+  let body;
+  if (fakeBooking || sum.wrong_call_tagging === true) {
+    body = `<div class="tip-row"><div class="tip-text">${fakeBooking
+      ? "The booking was not genuine, so the whole call scored 0. Only tag a booking when the customer clearly agrees to a specific service date."
+      : "The call was tagged with the wrong call type, so the whole call scored 0. Choose the disposition that matches what the customer actually said."}</div></div>`;
+  } else {
+    const lost = Object.keys(weights).map(pid => {
+      const level = String(audit[pid]?.rating || "Zero").toLowerCase();
+      const key = Object.keys(options[pid] || {}).find(k => k.toLowerCase() === level);
+      return { pid, lost: Number(weights[pid]) - (key ? Number(options[pid][key]) : 0) };
+    }).filter(r => r.lost > 0 && TIPS[r.pid]).sort((a, b) => b.lost - a.lost);
+    body = lost.length
+      ? lost.map(r => `<div class="tip-row">
+          <div class="tip-head"><span class="tip-name">${x(PL[r.pid] || r.pid)}</span><span class="tip-lost">−${+r.lost.toFixed(1)} pts</span></div>
+          <div class="tip-text">${x(TIPS[r.pid])}</div>
+        </div>`).join("")
+      : `<div class="tip-row"><div class="tip-text">Full marks on every parameter — no suggestions.</div></div>`;
+  }
+  return `<div class="sl" style="margin-top:22px">Suggestions for the CRE</div><div class="card tip-card">${body}</div>`;
+}
+
+function buildScoreCard(sum, res, nCheck) {
+  const bookingInfo = res?.booking_genuine;
+  const fakeBooking = bookingInfo && bookingInfo.genuine === false;
+  const wrongTagging = sum.wrong_call_tagging === true;
+  const forcedZero = fakeBooking || wrongTagging;
+  const possible = Number(sum.raw_possible ?? 100);
+  const score = forcedZero ? 0 : sum.score;
+  const scorePct = forcedZero ? 0 : (sum.score_pct != null ? sum.score_pct : score);
+  const scoreDisplay = forcedZero
+    ? `0/${Number.isFinite(possible) ? possible : 100}`
+    : (sum.score_display || (score != null ? String(score) : "—"));
+  const grade = forcedZero ? "Not Genuine" : (sum.grade || "—");
+  const ct    = sum.call_type  || "—";
+  const pct = scorePct!=null ? scorePct/100 : 0;
+  const R=32, C=40, circ=2*Math.PI*R, dash=pct*circ;
+  const col = scorePct>=75?"var(--green)":scorePct>=60?"var(--yellow)":"var(--red)";
+
+  return `<div class="card rv rv4">
+    <div class="score-hero">
+      <div class="score-ring">
+        <svg width="82" height="82" viewBox="0 0 82 82">
+          <circle cx="${C+1}" cy="${C+1}" r="${R}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="6.5"/>
+          <circle cx="${C+1}" cy="${C+1}" r="${R}" fill="none" stroke="${col}" stroke-width="6.5"
+            stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"/>
+        </svg>
+        <div class="score-num"><span>${x(scoreDisplay)}</span><span class="score-sub">earned / possible</span></div>
+      </div>
+      <div class="score-dtl">
+        <div class="score-grade">${x(grade)}</div>
+        <div class="score-chips">
+          <span class="chip chip-b">${x(ct)}</span>
+          ${fakeBooking ? `<span class="chip chip-r">FAKE BOOKING</span>` : ""}
+          ${wrongTagging ? `<span class="chip chip-r">WRONG CALL TAGGING</span>` : ""}
+          ${nCheck ? `<span class="chip chip-y" title="Ratings the model was less than 70% sure of">${nCheck} to check</span>` : ""}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// The latest human review from the reviewer dashboard (port 5001); the AI score above stays as it is.
+function buildHumanReview(r, audit) {
+  const done = r.status === "reviewed";
+  const when = new Date(r.created_at * 1000).toLocaleString("en-IN", {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"});
+  const params = Object.entries(r.params || {});
+  const disagreed = params.filter(([, p]) => p.verdict === "disagree");
+  const agreed = params.filter(([, p]) => p.verdict === "agree").length;
+  const b = r.booking || {}, ct = r.call_type || {};
+  const lines = [];
+  if (b.verdict === "disagree") lines.push(`<div class="hr-line"><b>Booking:</b> reviewer says ${b.genuine ? "genuine" : "not genuine"}${b.note ? ` — ${x(b.note)}` : ""}</div>`);
+  if (ct.verdict === "disagree") lines.push(`<div class="hr-line"><b>Call type:</b> should be ${x(CALL_TYPE_LABELS[ct.correct] || ct.correct || "—")}${ct.note ? ` — ${x(ct.note)}` : ""}</div>`);
+  disagreed.forEach(([pid, p]) => lines.push(`<div class="hr-line"><b>${x(PL[pid] || pid)}:</b> AI ${x(audit[pid]?.rating || "—")} → reviewer ${x(p.rating || "—")}${p.note ? ` — ${x(p.note)}` : ""}</div>`));
+  params.filter(([, p]) => p.verdict !== "disagree" && p.note).forEach(([pid, p]) =>
+    lines.push(`<div class="hr-line"><b>${x(PL[pid] || pid)}:</b> ${x(p.note)}</div>`));
+  if (r.overall) lines.push(`<div class="hr-line"><b>Comment:</b> ${x(r.overall)}</div>`);
+  if (r.coaching) lines.push(`<div class="hr-line"><b>Coaching:</b> ${x(r.coaching)}</div>`);
+  if ((r.asr_flags || []).length) lines.push(`<div class="hr-line"><b>Transcript flagged:</b> ${r.asr_flags.map(f => `${x(f.turn)}${f.note ? ` (${x(f.note)})` : ""}`).join(", ")}</div>`);
+  return `<div class="card human-review">
+    <div class="hr-head"><span class="chip ${done ? "chip-g" : "chip-y"}">${done ? "Reviewed" : "In review"}</span>
+      <span>${x(r.reviewer)} · ${x(when)}${r.versions > 1 ? ` · ${r.versions} versions` : ""}</span>
+      <span class="hr-count">${agreed} agree · ${disagreed.length} disagree</span></div>
+    ${r.reviewer_score ? `<div class="hr-score">Reviewer score <span class="chip ${r.reviewer_score.grade === "Not Genuine" ? "chip-r" : pctClass(r.reviewer_score.pct)}">${
+      r.reviewer_score.grade === "Not Genuine" ? "0 · Not genuine" : `${Math.round(r.reviewer_score.pct)}%`}</span>
+      <span class="hr-sub">${+Number(r.reviewer_score.earned).toFixed(2)}/${+Number(r.reviewer_score.possible).toFixed(2)}${
+      r.reviewer_score.zero_reason ? ` · ${x(r.reviewer_score.zero_reason)}` : ""} · AI score above is unchanged</span></div>` : ""}
+    ${lines.join("") || `<div class="hr-line" style="color:var(--t3)">No corrections or comments.</div>`}
+  </div>`;
+}
+
+const TURN_RE = /^T\d{1,4}$/;
+
+function turnChips(turns) {
+  return (turns || []).filter(t => TURN_RE.test(t))
+    .map(t => `<button type="button" class="turn-chip" title="Show this turn in the transcript" onclick="showTurn('${t}')">${t}</button>`)
+    .join("");
+}
+
+// Yellow chip on a rating the model was unsure of (Brio confidence below 70%).
+function checkChip(item) {
+  if (!item?.check) return "";
+  // No confidence: flagged for another reason (a Booking call too short to judge).
+  return item.confidence == null
+    ? `<span class="ev-src ev-check" title="Please verify.">Check</span>`
+    : `<span class="ev-src ev-check" title="The model was only ${Math.round(item.confidence * 100)}% sure. Please verify.">Check · ${Math.round(item.confidence * 100)}%</span>`;
+}
+
+function buildEvidence(ev) {
+  if (!ev) return "";
+  const cls = {"Fine-tuned model":"ev-ft","Stock model":"ev-stock"}[ev.source] || "ev-rule";
+  return `<div class="ev"><span class="ev-src ${cls}">${x(ev.source || "")}</span>${checkChip(ev)}${turnChips(ev.turns)}${
+    ev.evidence ? `<span class="pe">${x(ev.evidence)}</span>` : ""}</div>`;
+}
+
+function buildBookingCheck(b) {
+  const genuine = b.genuine === true;
+  const reason = String(b.reason || "").replace(/_/g, " ");
+  return `<div class="card booking-check">
+    <div class="booking-check-head"><span class="sd ${genuine ? "sd-full" : "sd-zero"}">${genuine ? "Genuine" : "Not genuine"}</span>Booking check${
+      !genuine && reason ? ` · ${x(reason)}` : ""}${checkChip(b)}</div>
+    ${b.evidence ? `<div class="pe">${x(b.evidence)}</div>` : ""}
+    ${(b.turns || []).length ? `<div class="ev">${turnChips(b.turns)}</div>` : ""}
+  </div>`;
+}
+
+// Open the transcript and highlight one cited turn.
+function showTurn(tid) {
+  const wasOpen = S.txOpen;
+  if (!wasOpen) toggleTranscript();
+  setTimeout(() => {
+    const row = document.getElementById("turn-" + tid);
+    if (!row) { showError(`Turn ${tid} is not in the displayed transcript.`); return; }
+    row.scrollIntoView({ behavior: "smooth", block: "center" });
+    row.classList.remove("tx-hit");
+    void row.offsetWidth;
+    row.classList.add("tx-hit");
+  }, wasOpen ? 0 : 450);
+}
+
+function buildScorecard(audit, table, reportWeights=null, reportOptions=null, evidence=null) {
+  const wt = reportWeights || WEIGHTS[table] || {};
+  const earnedFor = (pid, rating) => {
+    const normalized = rating === "half" ? "partial" : rating;
+    const configured = reportOptions?.[pid] || null;
+    if (configured) {
+      const key = Object.keys(configured).find(k => k.toLowerCase() === normalized);
+      return key ? Number(configured[key]) : 0;
+    }
+    const legacyFrac = {full:1,good:0.5,partial:0.5,half:0.5,zero:0};
+    return (legacyFrac[normalized] || 0) * (wt[pid] || 0);
+  };
+  let h = "";
+  SECTIONS.forEach(([name, pids]) => {
+    const active = pids.filter(p => audit[p]);
+    if (!active.length) return;
+    const id = name.replace(/\s+/g,"_");
+    let secEarned = 0, secPossible = 0;
+    active.forEach(pid => {
+      const w = wt[pid] || 0;
+      const r = (audit[pid]?.rating||"zero").toLowerCase();
+      secEarned   += earnedFor(pid, r);
+      secPossible += w;
+    });
+    const secLabel = secPossible > 0
+      ? `${+secEarned.toFixed(1)}/${secPossible} pts`
+      : `${active.filter(p=>(audit[p]?.rating||"").toLowerCase()==="full").length}/${active.length} Full`;
+    const secCls = secPossible > 0
+      ? (secEarned >= secPossible * 0.8 ? "var(--green)" : secEarned >= secPossible * 0.5 ? "var(--yellow)" : "var(--red)")
+      : "var(--green)";
+    h += `<div class="sc-section">
+      <div class="sc-head" onclick="toggleSec('${id}')">
+        <span class="sc-name">${x(name)}</span>
+        <div class="sc-right">
+          <span style="color:${secCls};font-weight:600">${secLabel}</span>
+          <span class="chev open" id="chev_${id}">›</span>
+        </div>
+      </div>
+      <div class="sc-body exp" id="sec_${id}">`;
+    active.forEach(pid => {
+      const e = audit[pid];
+      const r = (e?.rating||"zero").toLowerCase();
+      const w = wt[pid] || 0;
+      const earned = earnedFor(pid, r);
+      const sdCls = r==="full"?"sd-full":(r==="good"||r==="partial"||r==="half")?"sd-half":"sd-zero";
+      const badge = w > 0
+        ? `<span class="sd ${sdCls}">${+earned.toFixed(1)}/${w}</span>`
+        : `<span class="sd ${sdCls}">${(e?.rating||"—")}</span>`;
+      h += `<div class="param-row">
+        <div>
+          <div class="pq">${x(PL[pid]||pid)}</div>
+          ${buildEvidence(evidence?.[pid])}
+        </div>
+        <div class="param-right">${badge}</div>
+      </div>`;
+    });
+    h += `</div></div>`;
+  });
+  return h;
+}
+
+// ── Job management ───────────────────────────────────────────────────────────
+async function startTranscribe() {
+  if (!S.sel) return;
+  S.job = "pending"; S.jobType = "transcribe";
+  await renderMain();
+  const { job_id, error } = await api("POST","/api/transcribe",{stem:S.sel.stem});
+  if (error || !job_id) { showError("Could not start transcription:\n"+(error||"unknown")); S.job=null; await renderMain(); return; }
+  S.job = job_id;
+  startPoll(job_id, async (txRt) => {
+    // Transcription done — capture runtime, refresh file list, then auto-start audit
+    S.txRuntime = txRt;
+    await loadCalls();
+    S.sel = S.calls.find(c=>c.stem===S.sel.stem);
+    S.job = null; S.jobType = null;
+
+    // Auto-kick audit in background
+    const auR = await api("POST", "/api/audit", { stem: S.sel.stem, ...auditPayload() });
+    if (!auR.error && auR.job_id) {
+      S.job = auR.job_id; S.jobType = "audit";
+      await renderMain(); // shows transcript toggle + audit spinner
+      startPoll(auR.job_id, async () => {
+        await loadCalls();
+        S.sel = S.calls.find(c=>c.stem===S.sel.stem);
+        S.job = null; S.jobType = null;
+        await renderMain(); // report appears
+      });
+    } else {
+      showError("Automatic audit could not start:\n"+(auR.error||"No audit job was created."));
+      await renderMain();
+    }
+  });
+}
+
+function auditPayload() {
+  return {
+    skip_classify: true,
+    skip_names:    true,
+    skip_scoring:  false,
+    skip_coaching: false,
+  };
+}
+
+async function startAudit() {
+  if (!S.sel) return;
+  S.job = "pending"; S.jobType = "audit";
+  await renderMain();
+  const { job_id, error } = await api("POST","/api/audit",{stem:S.sel.stem,...auditPayload()});
+  if (error || !job_id) { showError("Could not start audit:\n"+(error||"unknown")); S.job=null; await renderMain(); return; }
+  S.job = job_id;
+  startPoll(job_id, async () => {
+    await loadCalls();
+    S.sel = S.calls.find(c=>c.stem===S.sel.stem);
+    S.job=null; S.jobType=null;
+    await renderMain();
+  });
+}
+
+function startPoll(jobId, onDone) {
+  stopPoll();
+  S.poll = setInterval(async () => {
+    const res = await api("GET",`/api/job/${jobId}`);
+    const { status, error, progress, runtime_s } = res;
+    if (progress) {
+      const el = document.getElementById("jobProgress");
+      if (el) el.textContent = progress;
+    }
+    if (status === "done") { stopPoll(); await onDone(runtime_s ?? null); }
+    else if (status === "error" || status === "not_found" || res.error) {
+      stopPoll(); S.job=null; S.jobType=null;
+      showError(error || (status === "not_found" ? "Audit job was not found. Restart the server and try again." : "unknown error"));
+      await renderMain();
+    }
+  }, 1500);
+}
+
+function stopPoll() { if (S.poll) { clearInterval(S.poll); S.poll=null; } }
+
+function showError(msg) {
+  const banner = document.getElementById("errBanner");
+  const body   = document.getElementById("errBody");
+  if (!banner || !body) return;
+  body.textContent = msg || "Unknown error";
+  banner.classList.add("show");
+}
+function dismissErr() {
+  const banner = document.getElementById("errBanner");
+  if (banner) banner.classList.remove("show");
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function toggleSec(id) {
+  const body = document.getElementById("sec_"+id);
+  const chev = document.getElementById("chev_"+id);
+  if (!body) return;
+  const open = body.classList.contains("exp");
+  body.classList.toggle("exp",!open);
+  if (chev) chev.classList.toggle("open",!open);
+}
+
+function togglePrDetail(uid) {
+  const det  = document.getElementById("pd_"+uid);
+  const chev = document.getElementById("chev_pd_"+uid);
+  if (!det) return;
+  const open = det.classList.contains("open");
+  det.classList.toggle("open",!open);
+  if (chev) chev.classList.toggle("open",!open);
+}
+
+function enc(s) { return encodeURIComponent(s); }
+function fmtRt(value) {
+  const seconds = Math.max(0, Number(value) || 0);
+  return seconds >= 60
+    ? `${Math.floor(seconds/60)}m ${Math.round(seconds%60)}s`
+    : `${Math.round(seconds * 10) / 10}s`;
+}
+function x(s) {
+  if (s==null) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ── Batch selection (CRM transaction ids, from the Select row) ──────────────
+function updateBatchBar() {
+  const n = S.batchSel.size;
+  const countEl = document.getElementById("batchCount");
+  const runBtn  = document.getElementById("batchRunBtn");
+  if (countEl) countEl.textContent = `${n.toLocaleString("en-IN")} selected`;
+  if (runBtn)  runBtn.disabled = n === 0 || S.batchRunning;
+}
+
+function setBatchControls(running) {
+  S.batchRunning = running;
+  const runBtn = document.getElementById("batchRunBtn");
+  if (runBtn) runBtn.disabled = running || S.batchSel.size === 0;
+}
+
+// Downloads what isn't downloaded yet, then transcribes and audits (again, if already audited).
+async function runBatch() {
+  if (!S.batchSel.size || S.batchRunning) return;
+  const ids = [...S.batchSel];
+  if (ids.length > 100) {
+    const hours = ids.length * 12 / 3600;  // ~12 s a call (Brio audit, transcription, download)
+    const ok = await showConfirm(
+      `Run ${ids.length.toLocaleString("en-IN")} calls?`,
+      `They are downloaded, transcribed and audited one after another: roughly ${
+        hours >= 1 ? `${hours.toFixed(1)} hours` : `${Math.ceil(hours * 60)} minutes`}. Calls already audited are audited again; filter "Not audited yet" first to skip them.`,
+      "Run", "Cancel");
+    if (!ok) return;
+  }
+  S.batchSel.clear();
+  updateBatchBar();
+  renderList();
+  await startFetch({ date: S.day, transaction_ids: ids, reaudit: true });
+}
+
+// The batch runs on the server; the dashboard only links to its live page.
+async function checkActiveBatch() {
+  clearTimeout(S.batchWatch);
+  const b = await api("GET", "/api/batch/latest");
+  const running = b.status === "running";
+  if (S.batchRunning && !running) {
+    await loadCalls();
+    if (S.sel) await renderMain();
+  }
+  setBatchControls(running);
+  const el = document.getElementById("batchProgress");
+  if (el) {
+    el.style.display = b.batch_id ? "" : "none";
+    if (b.batch_id) {
+      el.innerHTML = `<a class="batch-live" href="/batch?id=${enc(b.batch_id)}">${running
+        ? `<span class="spin"></span>${b.stopping ? "Stopping after this call" : "Batch running"} · ${Number(b.done)}/${Number(b.total)} done`
+        : `Last batch${b.status === "cancelled" ? " (stopped)" : ""} · ${Number(b.done)}/${Number(b.total)} done`}<span class="batch-live-go">Open →</span></a>${
+        running && !b.stopping ? `<button class="btn btn-s btn-sm batch-stop" onclick="stopBatch(${x(JSON.stringify(b.batch_id))})">Stop batch</button>` : ""}`;
+    }
+  }
+  if (running) {
+    S.batchWatch = setTimeout(checkActiveBatch, 5000);
+    // Show scores in the list as calls finish, not only when the whole batch ends.
+    loadCalls().then(ok => { if (ok && !S.sel && S.view === "day") renderDayView(); });
+  }
+}
+
+async function stopBatch(batchId) {
+  const ok = await showConfirm("Stop batch?",
+    "The call in progress finishes first; the calls still waiting are not run.", "Stop", "Keep running");
+  if (!ok) return;
+  const r = await api("POST", `/api/batch/${enc(batchId)}/stop`);
+  if (r.error) { showError(`Could not stop the batch: ${r.error}`); return; }
+  checkActiveBatch();
+}
+
+// ── Engine: loads with `python wsgi.py`, unloads on Ctrl+C; the page shows its state ──
+async function emergencyStop() {
+  const ok = await showConfirm(
+    "Emergency Stop",
+    "This will immediately terminate Kataria transcription/audit work, kill Ollama owned by your DGX user, and stop this dashboard. SSH, VS Code and unrelated processes remain running. You must restart python wsgi.py afterward.",
+    "Kill Kataria + Ollama", "Cancel"
+  );
+  if (!ok) return;
+
+  const button = document.getElementById("emergencyBtn");
+  if (button) { button.disabled = true; button.textContent = "Stopping…"; }
+  const result = await api("POST", "/api/emergency-stop", {
+    confirm: "STOP_KATARIA_AND_OLLAMA",
+  });
+  if (result.error) {
+    if (button) { button.disabled = false; button.textContent = "⚠ Kill"; }
+    showError(`Emergency stop failed: ${result.error}`);
+    return;
+  }
+  stopPoll();
+  clearTimeout(S.batchWatch);
+  stopEnginePoll();
+  document.getElementById("engineStatus").textContent = "Dashboard stopping — restart python wsgi.py";
+  const progress = document.getElementById("batchProgress");
+  if (progress) {
+    progress.style.display = "";
+    progress.innerHTML = `<div class="bp-head"><span>Emergency stop sent</span><span>Stopped</span></div>`;
+  }
+}
+
+function startEnginePoll() {
+  if (S.enginePoll) return;
+  S.enginePoll = setInterval(pollEngineStatus, 2000);
+  pollEngineStatus();
+}
+
+function stopEnginePoll() {
+  if (S.enginePoll) { clearInterval(S.enginePoll); S.enginePoll = null; }
+}
+
+async function pollEngineStatus() {
+  const r = await api("GET", "/api/engine/status");
+  updateEngineUI(r);
+  if (r.status === "ready" && S.enginePoll) {
+    // Slow down polling once ready
+    clearInterval(S.enginePoll);
+    S.enginePoll = setInterval(pollEngineStatus, 10000);
+  }
+}
+
+function updateEngineUI(r) {
+  const status = r.status || "idle";
+  S.engineStatus = status;
+  const dot    = document.getElementById("engineDot");
+  const label  = document.getElementById("engineStatus");
+  if (!dot || !label) return;
+
+  const dotMap = {idle:"engine-dot-idle",loading:"engine-dot-loading",ready:"engine-dot-ready",error:"engine-dot-error"};
+  dot.className = "engine-dot " + (dotMap[status] || "engine-dot-idle");
+
+  const lblMap = {
+    idle:    "Engine not started — restart python wsgi.py",
+    loading: "Loading models…",
+    ready:   `Engine ready${r.tx_load_time ? ` (TX ${r.tx_load_time}s, AU ${r.au_load_time}s)` : ""}`,
+    error:   "Engine error",
+    unavailable: "Engine unavailable",
+  };
+  label.textContent = lblMap[status] || status;
+}
+
+// ── Views: the call list, or one full-width page (a call, CRE performance) ───
+function showPanel(which) {
+  document.getElementById("listView").hidden = which !== "list";
+  document.getElementById("mainPanel").hidden = which !== "main";
+}
+const BACK_BTN = `<button class="back-btn" onclick="showDayView()">← All calls</button>`;
+
+async function showDayView() {
+  if (S.job) {
+    const ok = await showConfirm("Job in Progress",
+      "The running job continues in the background, but its result won't open here.", "Show day", "Stay");
+    if (!ok) return;
+    stopPoll(); S.job = null; S.jobType = null;
+  }
+  S.sel = null;
+  renderList();
+  renderDayView();
+}
+
+function renderDayView() {
+  S.view = "day";
+  if (!S.sel) showPanel("list");
+}
+
+// ── Fetch calls from the CRM (pick → download → transcribe + audit) ──────────
+function openFetch() {
+  const day = S.day || yesterdayIso();
+  const types = ["BOOKING","FOLLOW_UPS","SERVICE_NT_REQUIRED","ESCALATION"];
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <form class="modal-box modal-wide" id="fetchForm">
+      <div class="modal-title">Fetch calls from the CRM</div>
+      <div class="form-hint">Takes the newest calls with a recording that aren't in the dashboard yet, downloads them, then transcribes and audits them one at a time.</div>
+      <div class="form-grid">
+        <label>Call date<input type="date" name="date" value="${x(day)}" max="${isoDay(new Date())}" required></label>
+        <label>How many calls<input type="number" name="limit" value="10" min="1" max="200" required></label>
+        <label class="full">Call type<select name="call_type"><option value="">All four call types</option>${types.map(t => `<option value="${t}">${CALL_TYPE_LABELS[t]}</option>`).join("")}</select></label>
+        <label>CRE<input name="cre" placeholder="Any · code or name" autocomplete="off"></label>
+        <label>Workshop<input name="station" placeholder="Any · name or code" autocomplete="off"></label>
+      </div>
+      <div class="modal-acts">
+        <button type="button" class="btn btn-s" id="fetchCancel">Cancel</button>
+        <button type="submit" class="btn btn-p">Fetch &amp; audit</button>
+      </div>
+    </form>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add("modal-in"));
+  const onKey = e => { if (e.key === "Escape") close(); };
+  const close = () => {
+    document.removeEventListener("keydown", onKey);
+    overlay.classList.remove("modal-in");
+    setTimeout(() => overlay.remove(), 200);
+  };
+  document.addEventListener("keydown", onKey);
+  overlay.querySelector("#fetchCancel").onclick = close;
+  overlay.addEventListener("click", e => { if (e.target === overlay) close(); });
+  overlay.querySelector("#fetchForm").onsubmit = e => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    close();
+    startFetch({
+      date: f.get("date"),
+      limit: Math.min(200, Math.max(1, Number(f.get("limit")) || 10)),
+      call_type: f.get("call_type") || null,
+      cre:String(f.get("cre") || "").trim() || null,
+      station: String(f.get("station") || "").trim() || null,
+    });
+  };
+  setTimeout(() => overlay.querySelector('input[name="limit"]')?.select(), 60);
+}
+
+function setFetchStatus(html, isError = false) {
+  const el = document.getElementById("fetchStatus");
+  if (!el) return;
+  el.hidden = false;
+  el.className = "fetch-status" + (isError ? " err" : "");
+  el.innerHTML = `${html}<button class="err-close" style="margin-left:auto;color:inherit;font-size:15px" aria-label="Dismiss" onclick="this.parentElement.hidden=true">×</button>`;
+}
+
+async function startFetch(params) {
+  clearTimeout(S.fetchTimer);
+  setFetchStatus(`<span class="spin"></span>Picking calls from the CRM…`);
+  const r = await api("POST", "/api/db/run", params);
+  if (r.error || !r.job_id) {
+    setFetchStatus(`Could not fetch calls: ${x(r.error || "unknown error")}`, true);
+    return;
+  }
+  if (params.date !== S.day) setDay(params.date);
+  pollFetch(r.job_id);
+}
+
+async function pollFetch(jobId) {
+  const j = await api("GET", `/api/job/${enc(jobId)}`);
+  if (j.status === "running" || j.status === "queued") {
+    setFetchStatus(`<span class="spin"></span>${x(j.progress || "Working…")}`);
+    S.fetchTimer = setTimeout(() => pollFetch(jobId), 2000);
+    return;
+  }
+  if (j.status !== "done") {
+    setFetchStatus(`Fetch failed: ${x(j.error || j.status || "unknown error")}`, true);
+    return;
+  }
+  const result = j.result || {};
+  S.fetchErrors = result.errors || [];
+  const msg = j.found ? x(j.progress || "Done") : "No new calls with a recording match these filters.";
+  setFetchStatus(msg + (S.fetchErrors.length
+    ? ` <a href="#" onclick="showFetchErrors();return false">Details</a>` : ""),
+    S.fetchErrors.length > 0 && !result.imported);
+  await loadCalls();
+  if (!S.sel && S.view === "day") renderDayView();
+  checkActiveBatch();
+}
+
+function showFetchErrors() {
+  showError((S.fetchErrors || []).map(r => `${r.stem || r.transaction_id}: ${r.error}`).join("\n"));
+}
+
+// ── CRE performance for the selected day ─────────────────────────────────────
+async function showCrePerformance() {
+  if (!S.day) { showError("Pick a date to see CRE performance."); return; }
+  if (S.job) {
+    const ok = await showConfirm("Job in Progress",
+      "The running job continues in the background, but its result won't open here.", "Show CREs", "Stay");
+    if (!ok) return;
+    stopPoll(); S.job = null; S.jobType = null;
+  }
+  S.sel = null;
+  S.view = "cre";
+  renderList();
+  showPanel("main");
+  const panel = document.getElementById("mainPanel");
+  panel.innerHTML = `${BACK_BTN}<div style="color:var(--t3);font-size:12px;padding:4px">Loading…</div>`;
+  const day = S.day;
+  const r = await api("GET", `/api/cre-performance?date=${enc(day)}`);
+  if (S.view !== "cre" || S.day !== day || S.sel) return;
+  if (r.error) {
+    panel.innerHTML = `${BACK_BTN}<div style="padding:20px;color:var(--red);font-size:13px">${x(r.error)}</div>`;
+    return;
+  }
+  S.creData = r.cres || [];
+  renderCreTable();
+}
+
+function sortCre(key) {
+  S.creSort = S.creSort.key === key
+    ? { key, dir: -S.creSort.dir }
+    : { key, dir: key === "calls" ? -1 : 1 };
+  renderCreTable();
+}
+
+function pctClass(pct) { return pct == null ? "chip-n" : pct >= 75 ? "chip-g" : pct >= 60 ? "chip-y" : "chip-r"; }
+
+function renderCreTable() {
+  const panel = document.getElementById("mainPanel");
+  if (!panel || S.view !== "cre" || S.sel) return;
+  const { key, dir } = S.creSort;
+  const value = r => key === "cre" ? String(r.cre_name || r.cre_code || "") : r[key];
+  const rows = [...(S.creData || [])].sort((a, b) => {
+    const va = value(a), vb = value(b);
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    return (typeof va === "string" ? va.localeCompare(vb) : va - vb) * dir;
+  });
+  const th = (k, label, cls = "") =>
+    `<th class="${cls}" onclick="sortCre('${k}')" aria-sort="${key === k ? (dir > 0 ? "ascending" : "descending") : "none"}">${label}${key === k ? (dir > 0 ? " ↑" : " ↓") : ""}</th>`;
+  const calls = rows.reduce((n, r) => n + r.calls, 0);
+  const body = rows.map(r => `
+    <tr onclick="filterByCre(${x(JSON.stringify(r.cre_code || ""))})" title="Show this CRE's calls in the list">
+      <td><div class="cre-name">${x(r.cre_name || r.cre_code || "Unknown")}</div>${r.cre_code && r.cre_name ? `<div class="cre-code">${x(r.cre_code)}</div>` : ""}</td>
+      <td class="num">${r.calls}</td>
+      <td class="num">${r.avg_score == null ? "—" : `<span class="chip ${pctClass(r.avg_score)}">${Math.round(r.avg_score)}%</span>`}</td>
+      <td class="ct-mix">${Object.entries(r.call_types || {}).map(([t, n]) => `${TYPE_SHORT[t] || t} ${n}`).join(" · ")}</td>
+      <td><div class="weak">${r.not_genuine ? `<span class="chip chip-r" title="Fake booking or wrong call tagging: the whole call scores 0">${r.not_genuine} not genuine</span>` : ""}${(r.weakest || []).map(w => `<span class="chip ${pctClass(w.pct)}">${x(PL[w.param] || w.param)} · ${Math.round(w.pct)}%</span>`).join("") || (r.not_genuine ? "" : `<span class="cre-code">All parameters full</span>`)}</div></td>
+    </tr>`).join("");
+  panel.innerHTML = `${BACK_BTN}
+    <div class="day-head rv rv1">
+      <h2>CRE performance${leadLabel() ? ` · ${x(leadLabel().trim())}` : ""}</h2>
+      <span>${x(dayLabel(S.day))} · ${rows.length} CRE${rows.length === 1 ? "" : "s"} · ${calls} audited call${calls === 1 ? "" : "s"}</span>
+      <div class="acts">
+        <button class="btn btn-s" onclick="exportDay()">Export day</button>
+      </div>
+    </div>
+    ${rows.length ? `<div class="card rv rv2"><table class="cre-table">
+      <thead><tr>${th("cre", "CRE")}${th("calls", "Calls", "num")}${th("avg_score", "Avg score", "num")}<th>Call types</th><th>Weakest parameters</th></tr></thead>
+      <tbody>${body}</tbody></table></div>`
+    : `<div class="empty" style="height:45vh"><div class="empty-ico">📊</div><h2>No audited calls on this day yet</h2><p>Scores appear here as calls finish auditing.</p></div>`}`;
+}
+
+function filterByCre(code) {
+  const input = document.getElementById("fCre");
+  if (!input) return;
+  input.value = code;
+  renderDayView();
+  applyFilters();
+}
+
+// ── Excel export of the selected day ─────────────────────────────────────────
+function exportDay() {
+  if (!S.day) { showError("Pick a date to export."); return; }
+  if (!S.calls.some(c => c.call_date === S.day && c.has_report)) {
+    showError(`No audited ${leadLabel()}calls on ${dayLabel(S.day)} yet.`);
+    return;
+  }
+  window.location.href = `/api/export?date=${enc(S.day)}`;
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+fetchCuda();
+restoreDashFilters();
+// The day stays while moving between pages in this tab; refreshing the page goes back to yesterday.
+S.day = (() => {
+  try {
+    if (performance.getEntriesByType("navigation")[0]?.type === "reload") { sessionStorage.removeItem("dashDay"); return yesterdayIso(); }
+    const kept = sessionStorage.getItem("dashDay");
+    return kept && /^\d{4}-\d{2}-\d{2}$/.test(kept) && kept <= todayIso() ? kept : yesterdayIso();
+  } catch { return yesterdayIso(); }
+})();
+renderDayView();
+loadCalls().then(async () => {
+  loadDay();
+  checkActiveBatch();
+  // /?stem=<stem> (from the fake bookings page) opens that call's page.
+  const stem = new URLSearchParams(location.search).get("stem");
+  const row = stem && S.calls.find(c => c.stem === stem);
+  if (row) { S.sel = row; await renderMain(); }
+});
+// Engine state: every 2 s while the models load, then every 10 s.
+startEnginePoll();
+</script>

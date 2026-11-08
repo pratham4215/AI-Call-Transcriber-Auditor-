@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kataria Audit · Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+:root {
+  --ground: #f6f4ef;
+  --ink: #1c1f24;
+  --muted: #5b6068;
+  --line: #e1dcd1;
+  --tab-ground: #efebe3;
+  --accent: #b8471f;
+}
+html, body { background: var(--ground); color: var(--ink); }
+body {
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding-inline: clamp(16px, 3vw, 40px);
+  padding-block: 20px 32px;
+}
+.top {
+  max-width: 1600px; margin: 0 auto 16px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px;
+}
+.name { font-family: "Source Serif 4", Georgia, serif; font-size: 22px; font-weight: 700; margin: 0; text-wrap: balance; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 5px; border-radius: 12px; background: var(--tab-ground); }
+.tabs button {
+  font: inherit; font-size: 15px; font-weight: 600; color: var(--muted);
+  min-height: 44px; padding: 0 18px; border: 0; border-radius: 9px; background: transparent; cursor: pointer;
+}
+.tabs button:hover { color: var(--ink); }
+.tabs button[aria-selected="true"] { background: #ffffff; color: var(--ink); box-shadow: 0 1px 2px rgba(28,31,36,.12); }
+.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.panel { max-width: 1600px; margin: 0 auto; }
+.frame {
+  overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--ground);
+  box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.05);
+}
+.stage { position: relative; overflow: hidden; }
+.stage > div { transform-origin: 0 0; }
+@media (prefers-reduced-motion: no-preference) { .panel:not([hidden]) { animation: fade .18s ease; } }
+@keyframes fade { from { opacity: .6; } to { opacity: 1; } }
+html, body { margin: 0; }
+.brand { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.back { color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none; }
+.back:hover { color: var(--ink); }
+.back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<header class="top">
+<div class="brand"><a class="back" href="/">← Dashboard</a>
+<h1 class="name">Hybrid call audit</h1></div>
+<nav class="tabs" role="tablist" aria-label="Diagrams">
+<button type="button" role="tab" id="tab-architecture" aria-controls="panel-architecture" aria-selected="true" tabindex="0">Architecture</button>
+<button type="button" role="tab" id="tab-dataflow" aria-controls="panel-dataflow" aria-selected="false" tabindex="-1">Data flow</button>
+<button type="button" role="tab" id="tab-workflow" aria-controls="panel-workflow" aria-selected="false" tabindex="-1">Workflow</button>
+<button type="button" role="tab" id="tab-sequence" aria-controls="panel-sequence" aria-selected="false" tabindex="-1">Runtime sequence</button>
+<button type="button" role="tab" id="tab-brio" aria-controls="panel-brio" aria-selected="false" tabindex="-1">Brio scoring</button>
+</nav>
+</header>
+
+<section class="panel" role="tabpanel" id="panel-architecture" aria-labelledby="tab-architecture">
+<div class="frame"><div class="stage">
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 72px 80px; background: #f6f4ef; display: flex; flex-direction: column; gap: 44px; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1c1f24">
+
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 16px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #5b6068">AI Dealership Call Audit</div>
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 58px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.05">Hybrid audit architecture</h1>
+</div>
+<div style="display: flex; gap: 28px; align-items: center; font-size: 17px; color: #3d4148">
+<div style="display: flex; align-items: center; gap: 10px"><span style="width: 16px; height: 16px; border-radius: 4px; background: #b8471f"></span>Fine-tuned AI</div>
+<div style="display: flex; align-items: center; gap: 10px"><span style="width: 16px; height: 16px; border-radius: 4px; background: #2f5d8c"></span>General AI</div>
+<div style="display: flex; align-items: center; gap: 10px"><span style="width: 16px; height: 16px; border-radius: 4px; background: #3d4148"></span>Rules &amp; CRM</div>
+</div>
+</div>
+
+<div style="flex-grow: 1; display: flex; align-items: center; justify-content: space-between">
+
+<div style="width: 300px; display: flex; flex-direction: column; align-items: center; gap: 6px">
+<div style="width: 300px; height: 112px; box-sizing: border-box; padding: 0 22px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; gap: 16px">
+<div style="width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; background: #efebe3; display: flex; align-items: center; justify-content: center">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1c1f24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"></path></svg>
+</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">Audio call</div>
+</div>
+<svg width="24" height="34" viewBox="0 0 24 34" fill="none" stroke="#1c1f24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v28"></path><path d="M6 24l6 6 6-6"></path></svg>
+<div style="width: 300px; height: 112px; box-sizing: border-box; padding: 0 22px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; gap: 16px">
+<div style="width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; background: #efebe3; display: flex; align-items: center; justify-content: center">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1c1f24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12h2"></path><path d="M6 8v8"></path><path d="M10 4v16"></path><path d="M14 7v10"></path><path d="M18 9v6"></path><path d="M22 12h-2"></path></svg>
+</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">Transcription + speaker separation</div>
+</div>
+<svg width="24" height="34" viewBox="0 0 24 34" fill="none" stroke="#1c1f24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v28"></path><path d="M6 24l6 6 6-6"></path></svg>
+<div style="width: 300px; height: 112px; box-sizing: border-box; padding: 0 22px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; gap: 16px">
+<div style="width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; background: #efebe3; display: flex; align-items: center; justify-content: center">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1c1f24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 9h8"></path><path d="M8 13h5"></path></svg>
+</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">Agent / customer transcript</div>
+</div>
+<svg width="24" height="34" viewBox="0 0 24 34" fill="none" stroke="#1c1f24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v28"></path><path d="M6 24l6 6 6-6"></path></svg>
+<div style="width: 300px; height: 112px; box-sizing: border-box; padding: 0 22px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; gap: 16px">
+<div style="width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; background: #efebe3; display: flex; align-items: center; justify-content: center">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1c1f24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"></path><path d="M7 7h.01"></path></svg>
+</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">Call type</div>
+</div>
+</div>
+
+<svg width="64" height="28" viewBox="0 0 64 28" fill="none" stroke="#1c1f24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 14h58"></path><path d="M52 6l8 8-8 8"></path></svg>
+
+<div style="width: 900px; box-sizing: border-box; padding: 28px 30px 26px; background: #ffffff; border: 2px solid #1c1f24; border-radius: 24px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="font-size: 18px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase">Hybrid AI audit engine</div>
+<div style="font-size: 16px; color: #5b6068">Three paths · one result</div>
+</div>
+
+<div style="display: grid; grid-template-columns: 56px 1fr 56px; align-items: center">
+<svg width="56" height="520" viewBox="0 0 56 520" fill="none" stroke="#1c1f24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M0 260h18"></path><path d="M18 80v360"></path><path d="M18 80h32"></path><path d="M18 260h32"></path><path d="M18 440h32"></path><path d="M44 74l6 6-6 6"></path><path d="M44 254l6 6-6 6"></path><path d="M44 434l6 6-6 6"></path></svg>
+
+<div style="display: flex; flex-direction: column; gap: 20px">
+<div style="height: 160px; box-sizing: border-box; padding: 0 28px; background: #fbefe9; border: 2.5px solid #b8471f; border-radius: 16px; display: flex; align-items: center; gap: 28px">
+<div style="width: 290px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px">
+<span style="align-self: flex-start; padding: 5px 12px; border-radius: 999px; background: #b8471f; color: #ffffff; font-size: 14px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase">Specialist</span>
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 30px; font-weight: 700; line-height: 1.1; color: #8f3515">Fine-tuned Qwen3-32B</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 9px; font-size: 19px; color: #3d4148">
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #b8471f"></span>Transcript + call type</div>
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #b8471f"></span>Trained call-handling skills only</div>
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #b8471f"></span>Ratings picked by probability</div>
+</div>
+</div>
+
+<div style="height: 160px; box-sizing: border-box; padding: 0 28px; background: #eef3f8; border: 1.5px solid #2f5d8c; border-radius: 16px; display: flex; align-items: center; gap: 28px">
+<div style="width: 290px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px">
+<span style="align-self: flex-start; padding: 5px 12px; border-radius: 999px; background: #2f5d8c; color: #ffffff; font-size: 14px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase">Generalist</span>
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 30px; font-weight: 700; line-height: 1.1; color: #234a70">Stock Qwen3-32B</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 9px; font-size: 19px; color: #3d4148">
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2f5d8c"></span>Remaining AI checks</div>
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2f5d8c"></span>CRM + business context</div>
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2f5d8c"></span>Evidence picked by probability</div>
+</div>
+</div>
+
+<div style="height: 160px; box-sizing: border-box; padding: 0 28px; background: #f1f0ec; border: 1.5px solid #3d4148; border-radius: 16px; display: flex; align-items: center; gap: 28px">
+<div style="width: 290px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px">
+<span style="align-self: flex-start; padding: 5px 12px; border-radius: 999px; background: #3d4148; color: #ffffff; font-size: 14px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase">No AI</span>
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 30px; font-weight: 700; line-height: 1.1; color: #1c1f24">Rules + CRM</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 9px; font-size: 19px; color: #3d4148">
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #3d4148"></span>CRM facts + applicability</div>
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #3d4148"></span>Business rules + overrides</div>
+<div style="display: flex; align-items: center; gap: 12px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #3d4148"></span>Derived values</div>
+</div>
+</div>
+</div>
+
+<svg width="56" height="520" viewBox="0 0 56 520" fill="none" stroke="#1c1f24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 80h32"></path><path d="M6 260h32"></path><path d="M6 440h32"></path><path d="M38 80v360"></path><path d="M38 260h16"></path><path d="M48 254l6 6-6 6"></path></svg>
+</div>
+
+<div style="display: flex; align-items: center; gap: 12px; font-size: 18px; color: #3d4148">
+<span style="width: 22px; height: 3px; border-radius: 2px; background: #b8471f"></span>The fine-tuned model is one specialist inside the engine, not a replacement for it.
+</div>
+</div>
+
+<svg width="64" height="28" viewBox="0 0 64 28" fill="none" stroke="#1c1f24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 14h58"></path><path d="M52 6l8 8-8 8"></path></svg>
+
+<div style="width: 300px; display: flex; flex-direction: column; align-items: center; gap: 6px">
+<div style="width: 300px; height: 112px; box-sizing: border-box; padding: 0 22px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; gap: 16px">
+<div style="width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; background: #efebe3; display: flex; align-items: center; justify-content: center">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1c1f24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>
+</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">Validation</div>
+</div>
+<svg width="24" height="34" viewBox="0 0 24 34" fill="none" stroke="#1c1f24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v28"></path><path d="M6 24l6 6 6-6"></path></svg>
+<div style="width: 300px; height: 112px; box-sizing: border-box; padding: 0 22px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; gap: 16px">
+<div style="width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; background: #efebe3; display: flex; align-items: center; justify-content: center">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1c1f24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>
+</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">Final score</div>
+</div>
+<svg width="24" height="34" viewBox="0 0 24 34" fill="none" stroke="#1c1f24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v28"></path><path d="M6 24l6 6 6-6"></path></svg>
+<div style="width: 300px; height: 112px; box-sizing: border-box; padding: 0 22px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; gap: 16px">
+<div style="width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; background: #efebe3; display: flex; align-items: center; justify-content: center">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1c1f24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h5"></path></svg>
+</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">Audit result</div>
+</div>
+<svg width="24" height="34" viewBox="0 0 24 34" fill="none" stroke="#1c1f24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v28"></path><path d="M6 24l6 6 6-6"></path></svg>
+<div style="width: 300px; height: 112px; box-sizing: border-box; padding: 0 22px; background: #1c1f24; border: 1px solid #1c1f24; border-radius: 14px; display: flex; align-items: center; gap: 16px">
+<div style="width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; background: #3d4148; display: flex; align-items: center; justify-content: center">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8"></path><path d="M12 17v4"></path></svg>
+</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25; color: #ffffff">Excel · Dashboard · API</div>
+</div>
+</div>
+
+</div>
+</div>
+</div></div>
+</section>
+<section class="panel" role="tabpanel" id="panel-dataflow" aria-labelledby="tab-dataflow" hidden>
+<div class="frame"><div class="stage">
+<div style="position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #f6f4ef; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1c1f24">
+
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<defs>
+<marker id="dfInk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1c1f24"></path></marker>
+<marker id="dfTeal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#177a64"></path></marker>
+<marker id="dfOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b8471f"></path></marker>
+<marker id="dfBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2f5d8c"></path></marker>
+<marker id="dfSlate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#3d4148"></path></marker>
+</defs>
+<g stroke="#1c1f24" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+<path d="M245 292V326" marker-end="url(#dfInk)"></path>
+<path d="M245 502V536" marker-end="url(#dfInk)"></path>
+<path d="M410 635H460V300H554" marker-end="url(#dfInk)"></path>
+<path d="M460 540H554" marker-end="url(#dfInk)"></path>
+<path d="M840 300H884" marker-end="url(#dfInk)"></path>
+<path d="M840 540H884" marker-end="url(#dfInk)"></path>
+<path d="M1735 362V404" marker-end="url(#dfInk)"></path>
+<path d="M1735 522V564" marker-end="url(#dfInk)"></path>
+<path d="M1735 682V724" marker-end="url(#dfInk)"></path>
+</g>
+<g stroke="#177a64" stroke-width="3.5" stroke-dasharray="12 9" stroke-linecap="round" stroke-linejoin="round">
+<path d="M410 905H500V350H522"></path>
+<path d="M500 590H554" marker-end="url(#dfTeal)"></path>
+<path d="M500 820H554" marker-end="url(#dfTeal)"></path>
+<path d="M840 590H884" marker-end="url(#dfTeal)"></path>
+<path d="M840 820H884" marker-end="url(#dfTeal)"></path>
+</g>
+<g stroke-width="3.5" stroke-dasharray="2 9" stroke-linecap="round" stroke-linejoin="round">
+<path d="M1210 300H1254" stroke="#b8471f" marker-end="url(#dfOrange)"></path>
+<path d="M1210 560H1254" stroke="#2f5d8c" marker-end="url(#dfBlue)"></path>
+<path d="M1210 820H1254" stroke="#3d4148" marker-end="url(#dfSlate)"></path>
+<path d="M1550 300H1590V820H1550M1550 560H1590" stroke="#1c1f24"></path>
+<path d="M1590 305H1624" stroke="#1c1f24" marker-end="url(#dfInk)"></path>
+</g>
+</svg>
+
+<div style="position: absolute; left: 80px; top: 56px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 16px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #5b6068">AI Dealership Call Audit</div>
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 54px; font-weight: 700; line-height: 1.05">Data flow</h1>
+</div>
+
+<div style="position: absolute; left: 1150px; top: 76px; width: 690px; display: flex; justify-content: flex-end; gap: 30px; font-size: 17px; color: #3d4148">
+<div style="display: flex; align-items: center; gap: 10px"><svg width="46" height="10" viewBox="0 0 46 10" aria-hidden="true"><path d="M2 5H44" stroke="#1c1f24" stroke-width="3.5" stroke-linecap="round"></path></svg>Transcript data</div>
+<div style="display: flex; align-items: center; gap: 10px"><svg width="46" height="10" viewBox="0 0 46 10" aria-hidden="true"><path d="M2 5H44" stroke="#177a64" stroke-width="3.5" stroke-dasharray="10 7" stroke-linecap="round"></path></svg>CRM data</div>
+<div style="display: flex; align-items: center; gap: 10px"><svg width="46" height="10" viewBox="0 0 46 10" aria-hidden="true"><path d="M2 5H44" stroke="#1c1f24" stroke-width="3.5" stroke-dasharray="2 8" stroke-linecap="round"></path></svg>Model results</div>
+</div>
+
+<div style="position: absolute; left: 80px; top: 200px; width: 330px; height: 90px; box-sizing: border-box; padding: 0 24px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; font-size: 24px; font-weight: 600">Audio</div>
+
+<div style="position: absolute; left: 80px; top: 330px; width: 330px; height: 170px; box-sizing: border-box; padding: 20px 24px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; flex-direction: column; gap: 12px">
+<div style="font-size: 24px; font-weight: 600">Transcript</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 16px; color: #3d4148">
+<span style="padding: 5px 11px; border-radius: 8px; background: #efebe3">Speaker</span>
+<span style="padding: 5px 11px; border-radius: 8px; background: #efebe3">Turn ID</span>
+<span style="padding: 5px 11px; border-radius: 8px; background: #efebe3">Conversation text</span>
+</div>
+</div>
+
+<div style="position: absolute; left: 80px; top: 540px; width: 330px; height: 190px; box-sizing: border-box; padding: 20px 24px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; flex-direction: column; gap: 12px">
+<div style="font-size: 24px; font-weight: 600">Call type</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; font-size: 16px; color: #3d4148">
+<span style="padding: 5px 11px; border-radius: 8px; background: #efebe3">Booking</span>
+<span style="padding: 5px 11px; border-radius: 8px; background: #efebe3">Follow up</span>
+<span style="padding: 5px 11px; border-radius: 8px; background: #efebe3">Escalation</span>
+<span style="padding: 5px 11px; border-radius: 8px; background: #efebe3">Service not req.</span>
+</div>
+</div>
+
+<div style="position: absolute; left: 80px; top: 830px; width: 330px; height: 150px; box-sizing: border-box; padding: 20px 24px; background: #e8f3ef; border: 2px dashed #177a64; border-radius: 14px; display: flex; flex-direction: column; justify-content: center; gap: 8px">
+<div style="font-size: 24px; font-weight: 600; color: #0f5a49">CRM / system data</div>
+<div style="font-size: 17px; color: #3d4148">Customer · vehicle · booking · tags</div>
+</div>
+
+<div style="position: absolute; left: 424px; top: 236px; font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #5b6068">Data split</div>
+
+<div style="position: absolute; left: 524px; top: 334px; width: 32px; height: 32px; border-radius: 50%; background: #b3261e; display: flex; align-items: center; justify-content: center">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3L13 13M13 3L3 13" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"></path></svg>
+</div>
+<div style="position: absolute; left: 518px; top: 382px; width: 220px; font-size: 15px; font-weight: 600; color: #b3261e">No CRM into fine-tuned</div>
+
+<div style="position: absolute; left: 560px; top: 225px; width: 280px; height: 150px; box-sizing: border-box; padding: 0 22px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; flex-direction: column; justify-content: center; gap: 6px">
+<div style="font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #b8471f">Path A</div>
+<div style="font-size: 22px; font-weight: 600; line-height: 1.25">Transcript + call type</div>
+</div>
+<div style="position: absolute; left: 560px; top: 485px; width: 280px; height: 150px; box-sizing: border-box; padding: 0 22px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; flex-direction: column; justify-content: center; gap: 6px">
+<div style="font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #2f5d8c">Path B</div>
+<div style="font-size: 22px; font-weight: 600; line-height: 1.25">Transcript + required CRM context</div>
+</div>
+<div style="position: absolute; left: 560px; top: 745px; width: 280px; height: 150px; box-sizing: border-box; padding: 0 22px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; flex-direction: column; justify-content: center; gap: 6px">
+<div style="font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #3d4148">Path C</div>
+<div style="font-size: 22px; font-weight: 600; line-height: 1.25">CRM / system data</div>
+</div>
+
+<div style="position: absolute; left: 890px; top: 225px; width: 320px; height: 150px; box-sizing: border-box; padding: 0 24px; background: #fbefe9; border: 2.5px solid #b8471f; border-radius: 16px; display: flex; flex-direction: column; justify-content: center; gap: 10px">
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 28px; font-weight: 700; color: #8f3515">Fine-tuned Qwen3-32B</div>
+<span style="align-self: flex-start; padding: 4px 11px; border-radius: 999px; background: #b8471f; color: #ffffff; font-size: 14px; font-weight: 600">Transcript + call type only</span>
+</div>
+<div style="position: absolute; left: 890px; top: 485px; width: 320px; height: 150px; box-sizing: border-box; padding: 0 24px; background: #eef3f8; border: 1.5px solid #2f5d8c; border-radius: 16px; display: flex; flex-direction: column; justify-content: center; gap: 10px">
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 28px; font-weight: 700; color: #234a70">Stock Qwen3-32B</div>
+<span style="align-self: flex-start; padding: 4px 11px; border-radius: 999px; background: #2f5d8c; color: #ffffff; font-size: 14px; font-weight: 600">Uses CRM where needed</span>
+</div>
+<div style="position: absolute; left: 890px; top: 745px; width: 320px; height: 150px; box-sizing: border-box; padding: 0 24px; background: #f1f0ec; border: 1.5px solid #3d4148; border-radius: 16px; display: flex; flex-direction: column; justify-content: center; gap: 10px">
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 28px; font-weight: 700">Deterministic rules</div>
+<span style="align-self: flex-start; padding: 4px 11px; border-radius: 999px; background: #3d4148; color: #ffffff; font-size: 14px; font-weight: 600">No AI</span>
+</div>
+
+<div style="position: absolute; left: 1260px; top: 225px; width: 290px; height: 150px; box-sizing: border-box; padding: 0 22px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; font-size: 21px; font-weight: 600; line-height: 1.3">Ratings for trained conversation skills</div>
+<div style="position: absolute; left: 1260px; top: 485px; width: 290px; height: 150px; box-sizing: border-box; padding: 0 22px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; font-size: 21px; font-weight: 600; line-height: 1.3">Ratings for remaining AI checks</div>
+<div style="position: absolute; left: 1260px; top: 745px; width: 290px; height: 150px; box-sizing: border-box; padding: 0 22px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; font-size: 19px; font-weight: 600; line-height: 1.3">Direct ratings · applicability · overrides · derived values</div>
+
+<div style="position: absolute; left: 1630px; top: 208px; font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #5b6068">All results</div>
+<div style="position: absolute; left: 1630px; top: 250px; width: 210px; height: 110px; box-sizing: border-box; padding: 0 20px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; font-size: 22px; font-weight: 600">Validation</div>
+<div style="position: absolute; left: 1630px; top: 410px; width: 210px; height: 110px; box-sizing: border-box; padding: 0 20px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; font-size: 22px; font-weight: 600; line-height: 1.25">Parameter merge</div>
+<div style="position: absolute; left: 1630px; top: 570px; width: 210px; height: 110px; box-sizing: border-box; padding: 0 20px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 14px; display: flex; align-items: center; font-size: 22px; font-weight: 600">Final score</div>
+<div style="position: absolute; left: 1630px; top: 730px; width: 210px; height: 110px; box-sizing: border-box; padding: 0 20px; background: #1c1f24; border: 1px solid #1c1f24; border-radius: 14px; display: flex; align-items: center; font-size: 22px; font-weight: 600; color: #ffffff">Audit report</div>
+
+</div>
+</div></div>
+</section>
+<section class="panel" role="tabpanel" id="panel-workflow" aria-labelledby="tab-workflow" hidden>
+<div class="frame"><div class="stage">
+<div style="position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #f6f4ef; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1c1f24">
+
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<defs>
+<marker id="wfInk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1c1f24"></path></marker>
+</defs>
+<g stroke="#1c1f24" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+<path d="M305 420H331" marker-end="url(#wfInk)"></path>
+<path d="M519 420H545" marker-end="url(#wfInk)"></path>
+<path d="M733 420H759" marker-end="url(#wfInk)"></path>
+<path d="M947 420H973" marker-end="url(#wfInk)"></path>
+<path d="M1161 420H1187" marker-end="url(#wfInk)"></path>
+<path d="M1375 420H1401" marker-end="url(#wfInk)"></path>
+<path d="M1589 420H1615" marker-end="url(#wfInk)"></path>
+<path d="M1067 544V600M737 600H1397M737 600V636M1067 600V636M1397 600V636"></path>
+<path d="M737 626V636" marker-end="url(#wfInk)"></path>
+<path d="M1067 626V636" marker-end="url(#wfInk)"></path>
+<path d="M1397 626V636" marker-end="url(#wfInk)"></path>
+<path d="M1709 544V636" marker-end="url(#wfInk)"></path>
+</g>
+</svg>
+
+<div style="position: absolute; left: 80px; top: 56px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 16px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #5b6068">AI Dealership Call Audit</div>
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 54px; font-weight: 700; line-height: 1.05">How one call is audited</h1>
+</div>
+
+<div style="position: absolute; left: 121px; top: 300px; width: 180px; height: 240px; box-sizing: border-box; padding: 24px 18px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 16px; display: flex; flex-direction: column; gap: 18px">
+<div style="width: 56px; height: 56px; border-radius: 50%; background: #1c1f24; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 600">1</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">Call received</div>
+</div>
+<div style="position: absolute; left: 335px; top: 300px; width: 180px; height: 240px; box-sizing: border-box; padding: 24px 18px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 16px; display: flex; flex-direction: column; gap: 18px">
+<div style="width: 56px; height: 56px; border-radius: 50%; background: #1c1f24; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 600">2</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">Audio transcribed</div>
+</div>
+<div style="position: absolute; left: 549px; top: 300px; width: 180px; height: 240px; box-sizing: border-box; padding: 24px 18px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 16px; display: flex; flex-direction: column; gap: 18px">
+<div style="width: 56px; height: 56px; border-radius: 50%; background: #1c1f24; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 600">3</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">Speakers identified</div>
+</div>
+<div style="position: absolute; left: 763px; top: 300px; width: 180px; height: 240px; box-sizing: border-box; padding: 24px 18px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 16px; display: flex; flex-direction: column; gap: 18px">
+<div style="width: 56px; height: 56px; border-radius: 50%; background: #1c1f24; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 600">4</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">Call type determined</div>
+</div>
+<div style="position: absolute; left: 977px; top: 300px; width: 180px; height: 240px; box-sizing: border-box; padding: 24px 18px; background: #1c1f24; border: 1px solid #1c1f24; border-radius: 16px; display: flex; flex-direction: column; gap: 18px">
+<div style="width: 56px; height: 56px; border-radius: 50%; background: #ffffff; color: #1c1f24; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 600">5</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25; color: #ffffff">Checks sent to the right engine</div>
+</div>
+<div style="position: absolute; left: 1191px; top: 300px; width: 180px; height: 240px; box-sizing: border-box; padding: 24px 18px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 16px; display: flex; flex-direction: column; gap: 18px">
+<div style="width: 56px; height: 56px; border-radius: 50%; background: #1c1f24; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 600">6</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">AI + CRM + rules process the call</div>
+</div>
+<div style="position: absolute; left: 1405px; top: 300px; width: 180px; height: 240px; box-sizing: border-box; padding: 24px 18px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 16px; display: flex; flex-direction: column; gap: 18px">
+<div style="width: 56px; height: 56px; border-radius: 50%; background: #1c1f24; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 600">7</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">Results validated + scored</div>
+</div>
+<div style="position: absolute; left: 1619px; top: 300px; width: 180px; height: 240px; box-sizing: border-box; padding: 24px 18px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 16px; display: flex; flex-direction: column; gap: 18px">
+<div style="width: 56px; height: 56px; border-radius: 50%; background: #1c1f24; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 600">8</div>
+<div style="font-size: 21px; font-weight: 600; line-height: 1.25">Final audit report</div>
+</div>
+
+<div style="position: absolute; left: 587px; top: 640px; width: 300px; height: 150px; box-sizing: border-box; padding: 0 22px; background: #fbefe9; border: 2.5px solid #b8471f; border-radius: 14px; display: flex; flex-direction: column; justify-content: center; gap: 6px">
+<div style="font-size: 21px; font-weight: 700; color: #8f3515">Fine-tuned Qwen</div>
+<div style="font-size: 18px; color: #3d4148; line-height: 1.3">Trained conversation skills</div>
+</div>
+<div style="position: absolute; left: 917px; top: 640px; width: 300px; height: 150px; box-sizing: border-box; padding: 0 22px; background: #eef3f8; border: 1.5px solid #2f5d8c; border-radius: 14px; display: flex; flex-direction: column; justify-content: center; gap: 6px">
+<div style="font-size: 21px; font-weight: 700; color: #234a70">Stock Qwen</div>
+<div style="font-size: 18px; color: #3d4148; line-height: 1.3">Remaining AI checks</div>
+</div>
+<div style="position: absolute; left: 1247px; top: 640px; width: 300px; height: 150px; box-sizing: border-box; padding: 0 22px; background: #f1f0ec; border: 1.5px solid #3d4148; border-radius: 14px; display: flex; flex-direction: column; justify-content: center; gap: 6px">
+<div style="font-size: 21px; font-weight: 700">Rules + CRM</div>
+<div style="font-size: 18px; color: #3d4148; line-height: 1.3">Business + CRM checks</div>
+</div>
+
+<div style="position: absolute; left: 1579px; top: 640px; width: 260px; height: 220px; box-sizing: border-box; padding: 22px 24px; background: #1c1f24; border-radius: 14px; display: flex; flex-direction: column; gap: 12px; color: #ffffff">
+<div style="font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #c9ccd1">Delivered</div>
+<div style="font-size: 21px; font-weight: 600">Score</div>
+<div style="font-size: 21px; font-weight: 600">Parameter results</div>
+<div style="font-size: 21px; font-weight: 600">Audit report</div>
+</div>
+
+</div>
+</div></div>
+</section>
+<section class="panel" role="tabpanel" id="panel-sequence" aria-labelledby="tab-sequence" hidden>
+<div class="frame"><div class="stage">
+<div style="position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #f6f4ef; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1c1f24">
+
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<defs>
+<marker id="sqInk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1c1f24"></path></marker>
+<marker id="sqOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b8471f"></path></marker>
+<marker id="sqTeal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#177a64"></path></marker>
+<marker id="sqBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2f5d8c"></path></marker>
+<marker id="sqSlate" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#3d4148"></path></marker>
+</defs>
+
+<rect x="748" y="262" width="200" height="778" rx="12" fill="#fbefe9"></rect>
+<rect x="1200" y="262" width="200" height="778" rx="12" fill="#eef3f8"></rect>
+
+<g stroke="#9a9ea5" stroke-width="2" stroke-dasharray="6 8">
+<path d="M170 262V1040"></path><path d="M396 262V1040"></path><path d="M622 262V1040"></path>
+<path d="M848 262V1040"></path><path d="M1074 262V1040"></path><path d="M1300 262V1040"></path>
+<path d="M1526 262V1040"></path><path d="M1752 262V1040"></path>
+</g>
+
+<g stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M170 300H392" stroke="#1c1f24" marker-end="url(#sqInk)"></path>
+<path d="M396 358H618" stroke="#1c1f24" stroke-dasharray="9 7" marker-end="url(#sqInk)"></path>
+<path d="M622 404H672V428H628" stroke="#1c1f24" marker-end="url(#sqInk)"></path>
+<path d="M622 474H844" stroke="#b8471f" stroke-width="4" marker-end="url(#sqOrange)"></path>
+<path d="M848 532H1522" stroke="#b8471f" stroke-dasharray="9 7" marker-end="url(#sqOrange)"></path>
+<path d="M622 590H1070" stroke="#177a64" marker-end="url(#sqTeal)"></path>
+<path d="M1074 636H1124V660H1080" stroke="#3d4148" marker-end="url(#sqSlate)"></path>
+<path d="M1074 706H1296" stroke="#177a64" stroke-width="4" marker-end="url(#sqTeal)"></path>
+<path d="M1300 764H1522" stroke="#2f5d8c" stroke-dasharray="9 7" marker-end="url(#sqBlue)"></path>
+<path d="M1526 810H1576V834H1532" stroke="#1c1f24" marker-end="url(#sqInk)"></path>
+<path d="M1074 880H1748" stroke="#3d4148" marker-end="url(#sqSlate)"></path>
+<path d="M1526 938H1748" stroke="#1c1f24" marker-end="url(#sqInk)"></path>
+<path d="M1752 996H174" stroke="#1c1f24" stroke-width="4" stroke-dasharray="9 7" marker-end="url(#sqInk)"></path>
+</g>
+
+<g font-family="IBM Plex Sans, system-ui, sans-serif" font-size="18" fill="#1c1f24" stroke="#f6f4ef" stroke-width="6" paint-order="stroke" stroke-linejoin="round">
+<text x="283" y="290" text-anchor="middle"><tspan font-weight="700">1</tspan>  Audio</text>
+<text x="509" y="348" text-anchor="middle"><tspan font-weight="700">2</tspan>  Speaker-labelled transcript</text>
+<text x="684" y="422"><tspan font-weight="700">3</tspan>  Determine call type</text>
+<text x="735" y="462" text-anchor="middle" fill="#8f3515" font-weight="600"><tspan font-weight="700">4</tspan>  Transcript + call type</text>
+<text x="1187" y="522" text-anchor="middle" fill="#8f3515"><tspan font-weight="700">5</tspan>  Trained parameter ratings, picked by probability</text>
+<text x="848" y="580" text-anchor="middle" fill="#0f5a49"><tspan font-weight="700">6</tspan>  Get required CRM data</text>
+<text x="1136" y="654"><tspan font-weight="700">7</tspan>  Rules + applicability</text>
+<text x="1187" y="694" text-anchor="middle" fill="#0f5a49" font-weight="600"><tspan font-weight="700">8</tspan>  Remaining checks + CRM context</text>
+<text x="1413" y="754" text-anchor="middle" fill="#234a70"><tspan font-weight="700">9</tspan>  Structured ratings</text>
+<text x="1588" y="828"><tspan font-weight="700">10</tspan>  Validate all outputs</text>
+<text x="1413" y="870" text-anchor="middle"><tspan font-weight="700">11</tspan>  Deterministic overrides</text>
+<text x="1639" y="928" text-anchor="middle"><tspan font-weight="700">12</tspan>  Combine + score</text>
+<text x="961" y="986" text-anchor="middle" font-weight="600"><tspan font-weight="700">13</tspan>  Final audit report</text>
+</g>
+</svg>
+
+<div style="position: absolute; left: 80px; top: 48px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 16px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #5b6068">AI Dealership Call Audit</div>
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 50px; font-weight: 700; line-height: 1.05">One call at runtime</h1>
+</div>
+
+<div style="position: absolute; left: 1010px; top: 70px; width: 830px; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px 28px; font-size: 16px; color: #3d4148">
+<div style="display: flex; align-items: center; gap: 10px"><svg width="42" height="10" viewBox="0 0 42 10" aria-hidden="true"><path d="M2 5H40" stroke="#1c1f24" stroke-width="3" stroke-linecap="round"></path></svg>Request</div>
+<div style="display: flex; align-items: center; gap: 10px"><svg width="42" height="10" viewBox="0 0 42 10" aria-hidden="true"><path d="M2 5H40" stroke="#1c1f24" stroke-width="3" stroke-dasharray="8 6" stroke-linecap="round"></path></svg>Result returned</div>
+<div style="display: flex; align-items: center; gap: 10px"><span style="width: 16px; height: 16px; border-radius: 4px; background: #177a64"></span>CRM data</div>
+<div style="display: flex; align-items: center; gap: 10px"><span style="width: 16px; height: 16px; border-radius: 4px; background: #b8471f"></span>Fine-tuned path</div>
+</div>
+
+<div style="position: absolute; left: 70px; top: 160px; width: 200px; height: 100px; box-sizing: border-box; padding: 0 14px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 18px; font-weight: 600; line-height: 1.2">User / system</div>
+<div style="position: absolute; left: 296px; top: 160px; width: 200px; height: 100px; box-sizing: border-box; padding: 0 14px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 18px; font-weight: 600; line-height: 1.2">Transcription engine</div>
+<div style="position: absolute; left: 522px; top: 160px; width: 200px; height: 100px; box-sizing: border-box; padding: 0 14px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 18px; font-weight: 600; line-height: 1.2">Call-type router</div>
+<div style="position: absolute; left: 748px; top: 160px; width: 200px; height: 100px; box-sizing: border-box; padding: 0 12px; background: #b8471f; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; color: #ffffff">
+<div style="font-size: 18px; font-weight: 700; line-height: 1.2">Fine-tuned Qwen3-32B</div>
+<div style="font-size: 13px; font-weight: 500">Transcript + call type only</div>
+</div>
+<div style="position: absolute; left: 974px; top: 160px; width: 200px; height: 100px; box-sizing: border-box; padding: 0 14px; background: #3d4148; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 18px; font-weight: 600; line-height: 1.2; color: #ffffff">CRM / rules engine</div>
+<div style="position: absolute; left: 1200px; top: 160px; width: 200px; height: 100px; box-sizing: border-box; padding: 0 12px; background: #2f5d8c; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; color: #ffffff">
+<div style="font-size: 18px; font-weight: 700; line-height: 1.2">Stock Qwen3-32B</div>
+<div style="font-size: 13px; font-weight: 500">May receive CRM context</div>
+</div>
+<div style="position: absolute; left: 1426px; top: 160px; width: 200px; height: 100px; box-sizing: border-box; padding: 0 14px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 18px; font-weight: 600; line-height: 1.2">Audit validator</div>
+<div style="position: absolute; left: 1652px; top: 160px; width: 200px; height: 100px; box-sizing: border-box; padding: 0 14px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 18px; font-weight: 600; line-height: 1.2">Scoring + reporting engine</div>
+
+</div>
+</div></div>
+</section>
+<section class="panel" role="tabpanel" id="panel-brio" aria-labelledby="tab-brio" hidden>
+<div class="frame"><div class="stage">
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 56px 80px 60px; background: #f6f4ef; display: flex; flex-direction: column; gap: 32px; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1c1f24">
+
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 16px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #5b6068">AI Dealership Call Audit</div>
+<h1 style="margin: 0; font-family: 'Source Serif 4', Georgia, serif; font-size: 54px; font-weight: 700; line-height: 1.05">Brio scoring: reading ratings by probability</h1>
+</div>
+<div style="padding: 10px 16px; border-radius: 10px; background: #efebe3; font-size: 17px; color: #3d4148">Switch: <span style="font-family: ui-monospace, Consolas, monospace; font-weight: 600; color: #1c1f24">AUDIT_SCORING=brio</span></div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; height: 470px">
+
+<div style="box-sizing: border-box; padding: 30px 34px; background: #ffffff; border: 1px solid #e1dcd1; border-radius: 18px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: center; gap: 14px">
+<span style="padding: 5px 12px; border-radius: 999px; background: #3d4148; color: #ffffff; font-size: 14px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase">Before</span>
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 30px; font-weight: 700">The model writes the whole answer</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 7px; font-family: ui-monospace, Consolas, monospace; font-size: 20px">
+<span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">{"</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">greeting</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">": "</span><span style="padding: 6px 9px; border-radius: 7px; background: #e3e0d8; font-weight: 700">Full</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">", "</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">intro</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">duction</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">": "</span><span style="padding: 6px 9px; border-radius: 7px; background: #e3e0d8; font-weight: 700">Partial</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">", "</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">vehicle</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">_number</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">_and</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">_customer</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">_name</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">": "</span><span style="padding: 6px 9px; border-radius: 7px; background: #e3e0d8; font-weight: 700">Full</span><span style="padding: 6px 9px; border-radius: 7px; background: #efebe3">", …</span>
+</div>
+<div style="display: flex; align-items: baseline; gap: 16px">
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 64px; font-weight: 700; line-height: 1">~140</div>
+<div style="font-size: 20px; color: #3d4148">steps for one stock call · Brio needs one per rating</div>
+</div>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; font-size: 19px; color: #3d4148; line-height: 1.35">
+<div style="display: flex; gap: 12px"><span style="margin-top: 9px; width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: #3d4148"></span>Every chip is one model step, including all the brackets, quotes and names.</div>
+<div style="display: flex; gap: 12px"><span style="margin-top: 9px; width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: #3d4148"></span>The stock call wrote about 140 tokens at about 10 per second; that writing was 72% of its time.</div>
+</div>
+</div>
+
+<div style="box-sizing: border-box; padding: 30px 34px; background: #fbefe9; border: 2.5px solid #b8471f; border-radius: 18px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: center; gap: 14px">
+<span style="padding: 5px 12px; border-radius: 999px; background: #b8471f; color: #ffffff; font-size: 14px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase">Brio</span>
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 30px; font-weight: 700; color: #8f3515">The model only answers: which option?</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 16px">
+<div style="font-family: ui-monospace, Consolas, monospace; font-size: 20px">{"greeting": "<span style="padding: 2px 10px; border: 2px dashed #b8471f; border-radius: 6px; color: #8f3515; font-weight: 700">?</span></div>
+<div style="display: grid; grid-template-columns: 90px 1fr 64px; align-items: center; gap: 8px 14px; font-size: 18px">
+<div style="font-weight: 700">Full</div><div style="height: 18px; border-radius: 4px; background: #b8471f; width: 93%"></div><div style="font-weight: 700">93%</div>
+<div>Zero</div><div style="height: 18px; border-radius: 4px; background: #e2b8a6; width: 7%"></div><div>7%</div>
+</div>
+<div style="font-family: ui-monospace, Consolas, monospace; font-size: 20px">{"greeting": "Full", "introduction": "<span style="padding: 2px 10px; border: 2px dashed #b8471f; border-radius: 6px; color: #8f3515; font-weight: 700">?</span></div>
+<div style="display: grid; grid-template-columns: 90px 1fr 64px; align-items: center; gap: 8px 14px; font-size: 18px">
+<div>Full</div><div style="height: 18px; border-radius: 4px; background: #e2b8a6; width: 24%"></div><div>24%</div>
+<div style="font-weight: 700">Partial</div><div style="height: 18px; border-radius: 4px; background: #b8471f; width: 71%"></div><div style="font-weight: 700">71%</div>
+<div>Zero</div><div style="height: 18px; border-radius: 4px; background: #e2b8a6; width: 5%"></div><div>5%</div>
+</div>
+</div>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px; font-size: 19px; color: #3d4148; line-height: 1.35">
+<div style="display: flex; gap: 12px"><span style="margin-top: 9px; width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: #b8471f"></span>Code writes the JSON; the model takes one step per rating, and the most likely option is picked.</div>
+<div style="display: flex; gap: 12px"><span style="margin-top: 9px; width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: #b8471f"></span>Each pick sees the earlier picks, like normal writing. Picks under 70% sure are flagged "Check". Percentages above are an example.</div>
+</div>
+</div>
+
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; flex-grow: 1">
+<div style="box-sizing: border-box; padding: 24px 26px; background: #ffffff; border: 1px solid #e1dcd1; border-top: 5px solid #b8471f; border-radius: 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #8f3515">Fine-tuned model</div>
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 34px; font-weight: 700">2.6× faster</div>
+<div style="font-size: 20px; color: #3d4148; line-height: 1.4">545 test calls: same accuracy (81.5% both ways), 97.7% identical ratings. 13.5 s → 5.2 s per call.</div>
+</div>
+<div style="box-sizing: border-box; padding: 24px 26px; background: #ffffff; border: 1px solid #e1dcd1; border-top: 5px solid #2f5d8c; border-radius: 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #234a70">Stock model</div>
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 34px; font-weight: 700">~49% less time</div>
+<div style="font-size: 20px; color: #3d4148; line-height: 1.4">40 real audits: 96.5% identical evidence states. 18.8 s → about 9.6 s per call (estimate).</div>
+</div>
+<div style="box-sizing: border-box; padding: 24px 26px; background: #ffffff; border: 1px solid #e1dcd1; border-top: 5px solid #177a64; border-radius: 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #0f5a49">Checked against humans</div>
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 34px; font-weight: 700">5 of 7</div>
+<div style="font-size: 20px; color: #3d4148; line-height: 1.4">Where Brio and normal writing disagreed, human auditors sided with Brio 5 times out of 7.</div>
+</div>
+<div style="box-sizing: border-box; padding: 24px 26px; background: #ffffff; border: 1px solid #e1dcd1; border-top: 5px solid #3d4148; border-radius: 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #3d4148">Safety net</div>
+<div style="font-family: 'Source Serif 4', Georgia, serif; font-size: 34px; font-weight: 700">Falls back</div>
+<div style="font-size: 20px; color: #3d4148; line-height: 1.4">Yes/no answers and option lists are picked too; only turn IDs and short reasons are written. Any Brio error: that call is written normally.</div>
+</div>
+</div>
+
+</div>
+</div></div>
+</section>
+
+<script>
+(function () {
+  const MIN_WIDTH = 900;  // below this the diagram scrolls sideways instead of shrinking further
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+
+  function fit() {
+    document.querySelectorAll('.panel:not([hidden]) .frame').forEach(frame => {
+      const stage = frame.querySelector('.stage');
+      const width = Math.max(frame.clientWidth, MIN_WIDTH);
+      const scale = width / 1920;
+      stage.style.width = width + 'px';
+      stage.style.height = Math.round(1080 * scale) + 'px';
+      stage.firstElementChild.style.transform = 'scale(' + scale + ')';
+    });
+  }
+
+  function show(key, focus) {
+    tabs.forEach(tab => {
+      const on = tab.id === 'tab-' + key;
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      tab.tabIndex = on ? 0 : -1;
+      document.getElementById(tab.getAttribute('aria-controls')).hidden = !on;
+      if (on && focus) tab.focus();
+    });
+    if (location.hash !== '#' + key) history.replaceState(null, '', '#' + key);
+    fit();
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => show(tab.id.slice(4)));
+    tab.addEventListener('keydown', e => {
+      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!step) return;
+      e.preventDefault();
+      show(tabs[(i + step + tabs.length) % tabs.length].id.slice(4), true);
+    });
+  });
+
+  const start = location.hash.slice(1);
+  show(tabs.some(t => t.id === 'tab-' + start) ? start : tabs[0].id.slice(4));
+  new ResizeObserver(fit).observe(document.body);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Kataria Batch Run</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f6f4ef;--bg2:#efebe3;--surface:#fff;--border:#e1dcd1;
+  --t1:#1c1f24;--t2:#5b6068;--t3:#80858d;
+  --accent:#2f5d8c;--accent-bg:rgba(47,93,140,0.10);
+  --green:#1a7f37;--green-bg:rgba(40,205,65,0.13);
+  --yellow:#a05a00;--yellow-bg:rgba(244,161,0,0.13);
+  --red:#c0392b;--red-bg:rgba(255,59,48,0.11);
+  --shadow:0 1px 3px rgba(60,45,20,0.07),0 6px 20px rgba(60,45,20,0.06);
+}
+body{font:400 13.5px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 48px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.back{color:var(--accent);text-decoration:none;font-size:13px;font-weight:600}
+h1{font-family:"Source Serif 4",Georgia,serif;font-size:26px;font-weight:700;letter-spacing:-0.01em}
+.pill{margin-left:auto;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700}
+.pill-running{background:var(--accent-bg);color:var(--accent)}
+.pill-done{background:var(--green-bg);color:var(--green)}
+.pill-stopped{background:var(--red-bg);color:var(--red)}
+.stop{height:30px;padding:0 14px;border-radius:8px;border:1px solid var(--red);background:var(--surface);color:var(--red);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.stop:hover:not(:disabled){background:var(--red-bg)}
+.stop:disabled{opacity:.5;cursor:not-allowed}
+.failed-note{color:var(--red);font-weight:600;padding:12px 18px}
+.failed-note a{color:var(--accent);margin-left:6px}
+.stop-err{font-size:12.5px;color:var(--red);background:var(--red-bg);border-radius:8px;padding:8px 12px;margin-bottom:12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+.stat-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.stat-value{font-size:22px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
+.ok{color:var(--green)}.bad{color:var(--red)}
+.track{height:8px;border-radius:999px;background:var(--bg2);overflow:hidden}
+.fill{height:100%;border-radius:inherit;background:var(--accent);transition:width 400ms ease}
+.meta{margin-top:8px;font-size:12px;color:var(--t2)}
+.now{display:flex;align-items:center;gap:12px}
+.now-name{font-weight:700}
+.now-detail{font-size:12px;color:var(--t2)}
+.now-time{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--t2);font-size:12px}
+.section{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin:22px 2px 8px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);padding:0 10px 8px;border-bottom:1px solid var(--border)}
+td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr.new td{animation:flash 1.6s ease}
+@keyframes flash{from{background:var(--accent-bg)}to{background:transparent}}
+.score{font-weight:700;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
+.chip-r{background:var(--red-bg);color:var(--red)}
+.chip-g{background:var(--green-bg);color:var(--green)}
+.err{font-size:12px;color:var(--red);margin-top:3px;white-space:pre-wrap;word-break:break-word}
+.num{font-variant-numeric:tabular-nums;color:var(--t2)}
+.empty{color:var(--t3);font-size:13px;padding:6px 0}
+.queue{font-size:12px;color:var(--t2);line-height:1.8}
+.spin{width:14px;height:14px;border:2px solid rgba(0,0,0,0.15);border-top-color:var(--accent);border-radius:50%;animation:rot .65s linear infinite;flex-shrink:0}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+@media (max-width:640px){th.hide,td.hide{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="/">← Dashboard</a>
+    <h1>Batch run</h1>
+    <span class="pill pill-running" id="pill">Loading…</span>
+    <button class="stop" id="stopBtn" onclick="stopBatch()" hidden>Stop</button>
+  </div>
+  <div id="stopError"></div>
+  <div id="content"><div class="card empty">Loading batch…</div></div>
+</div>
+
+<script>
+const PHASE = {queued:"Waiting", transcribing:"Transcribing", auditing:"Auditing", complete:"Completed", failed:"Failed", cancelled:"Cancelled"};
+const B = { id: new URLSearchParams(location.search).get("id"), seen: new Set(), failures: 0 };
+
+function x(s) {
+  if (s == null) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function fmtRt(value) {
+  const s = Math.max(0, Number(value) || 0);
+  if (s >= 3600) return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
+  return s >= 60 ? `${Math.floor(s/60)}m ${Math.round(s%60)}s` : `${Math.round(s*10)/10}s`;
+}
+function scoreColor(pct) {
+  if (pct == null) return "var(--t2)";
+  return pct >= 75 ? "var(--green)" : pct >= 60 ? "var(--yellow)" : "var(--red)";
+}
+async function getJSON(path) {
+  const r = await fetch(path, { cache: "no-store" });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+function render(b) {
+  const items = b.items || [];
+  const finished = items.filter(i => i.status === "completed" || i.status === "failed" || i.status === "cancelled");
+  const running = items.filter(i => i.status === "running");
+  const queued = items.filter(i => i.status === "queued");
+  const scored = items.filter(i => i.status === "completed" && i.score_pct != null);
+  const avg = scored.length ? scored.reduce((a, i) => a + Number(i.score_pct), 0) / scored.length : null;
+  const percent = Math.max(0, Math.min(100, Number(b.percent || 0)));
+
+  const pill = document.getElementById("pill");
+  const state = b.status === "running" ? [b.stopping ? "Stopping…" : "Running", b.stopping ? "pill-stopped" : "pill-running"]
+    : b.status === "done" ? ["Complete", "pill-done"] : ["Stopped", "pill-stopped"];
+  pill.textContent = state[0];
+  pill.className = "pill " + state[1];
+  const stop = document.getElementById("stopBtn");
+  stop.hidden = b.status !== "running";
+  stop.disabled = !!b.stopping;
+  stop.textContent = b.stopping ? "Stopping after this call…" : "Stop";
+  const cancelled = items.filter(i => i.status === "cancelled").length;
+  document.title = b.status === "running" ? `(${b.done}/${b.total}) Kataria Batch Run` : "Kataria Batch Run";
+
+  const nowHtml = running.length ? running.map(i => `<div class="now">
+      <span class="spin"></span>
+      <div><div class="now-name">${x(i.name)}</div>
+      <div class="now-detail">${x(PHASE[i.phase] || i.phase)}${Number(i.phase_percent) > 0 ? ` · ${Number(i.phase_percent)}%` : ""}${i.progress ? " · " + x(i.progress) : ""}</div></div>
+      <div class="now-time">${i.elapsed_s ? fmtRt(i.elapsed_s) : ""}</div>
+    </div>`).join("")
+    : `<div class="empty">${b.status === "running" ? "Starting next call…" : "Nothing running."}</div>`;
+
+  const firstRender = B.seen.size === 0;
+  // Failed calls are listed on the Failed page with their reason and log, not here.
+  const failedN = finished.filter(i => i.status === "failed").length;
+  const rows = finished.filter(i => i.status === "completed").reverse().map(i => {
+    const key = `${i.id}:${i.status}`;
+    const isNew = !firstRender && !B.seen.has(key);
+    B.seen.add(key);
+    const ok = i.status === "completed";
+    const flag = i.flag ? `<span class="chip chip-r">${x(i.flag)}</span>`
+      : ok ? `<span class="chip chip-g">Done</span>` : `<span class="chip chip-r">${x(PHASE[i.status] || "Failed")}</span>`;
+    return `<tr class="${isNew ? "new" : ""}">
+      <td class="num">${Number(i.id) + 1}</td>
+      <td><div style="font-weight:600">${x(i.name)}</div>${!ok && i.error ? `<div class="err">${x(i.error)}</div>` : ""}</td>
+      <td class="hide">${x(i.call_type || "—")}</td>
+      <td><span class="score" style="color:${scoreColor(i.score_pct)}">${x(i.score_display || "—")}</span></td>
+      <td class="hide">${x(i.grade || "—")}</td>
+      <td>${flag}</td>
+      <td class="num">${i.tx_runtime_s != null ? fmtRt(i.tx_runtime_s) : "—"}</td>
+      <td class="num">${i.runtime_s != null ? fmtRt(i.runtime_s) : "—"}</td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("content").innerHTML = `
+    <div class="card">
+      <div class="stats">
+        <div><div class="stat-label">Completed</div><div class="stat-value">${Number(b.done)}/${Number(b.total)}</div></div>
+        <div><div class="stat-label">Successful</div><div class="stat-value ok">${Number(b.successful || 0)}</div></div>
+        <div><div class="stat-label">Failed</div><div class="stat-value ${Number(b.failed) ? "bad" : ""}">${Number(b.failed || 0)}</div></div>
+        <div><div class="stat-label">Average score</div><div class="stat-value" style="color:${scoreColor(avg)}">${avg != null ? avg.toFixed(1) + "%" : "—"}</div></div>
+        <div><div class="stat-label">${b.status === "running" ? "Elapsed" : "Total time"}</div><div class="stat-value">${fmtRt(b.elapsed_s)}</div></div>
+      </div>
+      <div class="track"><div class="fill" style="width:${percent}%"></div></div>
+      <div class="meta">${percent}% · ${b.mode === "both" ? "Transcribe + Audit" : b.mode === "audit" ? "Audit only" : "Transcribe only"} · ${x(b.model || "")}${
+        cancelled ? ` · stopped: ${cancelled} call${cancelled === 1 ? "" : "s"} not run` : ""}</div>
+    </div>
+    <div class="section">Now processing</div>
+    <div class="card">${nowHtml}</div>
+    ${failedN ? `<div class="card failed-note">${failedN} call${failedN === 1 ? "" : "s"} failed in this batch.
+      <a href="/failed">Open Failed calls →</a></div>` : ""}
+    <div class="section">Completed calls</div>
+    <div class="card">${rows ? `<table>
+      <thead><tr><th>#</th><th>Call</th><th class="hide">Call type</th><th>Score</th><th class="hide">Grade</th><th>Status</th><th>Transcribe time</th><th>Audit time</th></tr></thead>
+      <tbody>${rows}</tbody></table>` : `<div class="empty">No calls completed yet.</div>`}</div>
+    ${queued.length ? `<div class="section">Up next (${queued.length})</div>
+      <div class="card queue">${queued.map(i => x(i.name)).join(" · ")}</div>` : ""}`;
+}
+
+// The call in progress finishes; the calls still waiting are not run.
+async function stopBatch() {
+  if (!B.id || !confirm("Stop this batch? The call in progress finishes first; the calls still waiting are not run.")) return;
+  const btn = document.getElementById("stopBtn");
+  btn.disabled = true;
+  document.getElementById("stopError").innerHTML = "";
+  try {
+    const r = await fetch(`/api/batch/${encodeURIComponent(B.id)}/stop`, { method: "POST" });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+    btn.textContent = "Stopping after this call…";
+  } catch (error) {
+    btn.disabled = false;
+    document.getElementById("stopError").innerHTML = `<div class="stop-err">Could not stop the batch: ${x(error.message)}</div>`;
+  }
+}
+
+// One request at a time: the next poll is scheduled only after this one ends.
+async function poll() {
+  let next = 1500;
+  try {
+    if (!B.id) {
+      const latest = await getJSON("/api/batch/latest");
+      if (!latest.batch_id) {
+        document.getElementById("pill").textContent = "No batch";
+        document.getElementById("content").innerHTML = `<div class="card empty">No batch has been started. Select calls on the dashboard and press Run.</div>`;
+        return;
+      }
+      B.id = latest.batch_id;
+      history.replaceState(null, "", `/batch?id=${encodeURIComponent(B.id)}`);
+    }
+    const b = await getJSON(`/api/batch/${encodeURIComponent(B.id)}`);
+    if (b.status === "not_found") {
+      document.getElementById("pill").textContent = "Not found";
+      document.getElementById("content").innerHTML = `<div class="card empty">This batch is no longer available. The server may have restarted.</div>`;
+      return;
+    }
+    B.failures = 0;
+    render(b);
+    if (b.status !== "running") return;
+  } catch (error) {
+    B.failures += 1;
+    next = Math.min(10000, 1500 * B.failures);
+    if (B.failures >= 2) {
+      const pill = document.getElementById("pill");
+      pill.textContent = "Reconnecting…";
+      pill.className = "pill pill-stopped";
+    }
+  }
+  setTimeout(poll, next);
+}
+poll();
+</script>
+</body>
+</html>

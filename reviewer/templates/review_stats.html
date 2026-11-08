@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Kataria Review Agreement</title>
+{% include "_head.html" %}
+<style>
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.tile-l{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.tile-v{font-size:22px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
+.tile-s{font-size:12px;color:var(--t2)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);padding:0 10px 8px;border-bottom:1px solid var(--border)}
+td{padding:9px 10px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.meter{height:6px;border-radius:999px;background:var(--red-bg);overflow:hidden;min-width:80px}
+.meter i{display:block;height:100%;background:var(--green)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  {% set page = "stats" %}{% include "_bar.html" %}
+  <h1 style="margin-bottom:12px">AI vs reviewers</h1>
+  <div class="card filters">
+    <label class="muted" style="font-size:12px">Calls from <input type="date" id="from" onchange="load()"></label>
+    <label class="muted" style="font-size:12px">to <input type="date" id="to" onchange="load()"></label>
+    <button class="btn" onclick="document.getElementById('from').value='';document.getElementById('to').value='';load()">All dates</button>
+    <a class="btn btn-p" id="export" style="margin-left:auto" href="/api/export">Export reviews (Excel)</a>
+  </div>
+  <div id="error"></div>
+  <div id="content"><div class="card empty"><span class="spin"></span> Loading…</div></div>
+</div>
+{% include "_common.html" %}
+<script>
+function pct(a, d) { return a + d ? Math.round(100 * a / (a + d)) : null; }
+function tile(labelText, counts) {
+  const p = pct(counts.agree, counts.disagree);
+  return `<div class="card"><div class="tile-l">${labelText}</div><div class="tile-v">${p == null ? "—" : p + "%"}</div>
+    <div class="tile-s">${counts.agree} agree · ${counts.disagree} disagree</div></div>`;
+}
+async function load() {
+  const from = document.getElementById("from").value, to = document.getElementById("to").value;
+  const q = new URLSearchParams();
+  if (from) q.set("from", from);
+  if (to) q.set("to", to);
+  const eq = new URLSearchParams(q);
+  eq.set("who", reviewerName());  // the export is logged under this name
+  document.getElementById("export").href = `/api/export?${eq}`;
+  let s;
+  try {
+    s = await getJSON(`/api/stats${q.toString() ? "?" + q : ""}`);
+    document.getElementById("error").innerHTML = "";
+  } catch (error) {
+    document.getElementById("error").innerHTML = `<div class="err">Could not load: ${x(error.message)}</div>`;
+    return;
+  }
+  const rows = Object.entries(s.params).map(([pid, c]) => ({ pid, ...c, p: pct(c.agree, c.disagree) }))
+    .sort((a, b) => (a.p ?? 101) - (b.p ?? 101));
+  const all = rows.reduce((t, r) => ({ agree: t.agree + r.agree, disagree: t.disagree + r.disagree }), { agree: 0, disagree: 0 });
+  document.getElementById("content").innerHTML = `
+    <div class="tiles">
+      <div class="card"><div class="tile-l">Reviewed calls</div><div class="tile-v">${s.reviewed_calls.toLocaleString("en-IN")}</div>
+        <div class="tile-s">${Object.entries(s.reviewers).map(([n, c]) => `${x(n)} ${c}`).join(" · ") || "—"}</div></div>
+      ${tile("Parameters agreed", all)}
+      ${tile("Booking verdict agreed", s.booking)}
+      ${tile("Call type agreed", s.call_type)}
+    </div>
+    <div class="card">${rows.length ? `<table>
+      <thead><tr><th>Parameter (weakest first)</th><th class="num">Agree</th><th class="num">Disagree</th><th class="num">Agreement</th><th></th></tr></thead>
+      <tbody>${rows.map(r => `<tr><td>${x(PL[r.pid] || r.pid)}</td><td class="num">${r.agree}</td><td class="num">${r.disagree}</td>
+        <td class="num"><b>${r.p == null ? "—" : r.p + "%"}</b></td><td><div class="meter"><i style="width:${r.p ?? 0}%"></i></div></td></tr>`).join("")}</tbody>
+    </table>` : `<div class="empty">No reviews in this range yet.</div>`}</div>`;
+}
+// The date range stays while moving between pages in this tab; refreshing the page clears it.
+(function keepRange() {
+  try {
+    if (pageReloaded()) sessionStorage.removeItem("statsRange");
+    const state = JSON.parse(sessionStorage.getItem("statsRange") || "{}");
+    ["from", "to"].forEach(id => { if (typeof state[id] === "string") document.getElementById(id).value = state[id]; });
+  } catch {}
+  const save = () => { try { sessionStorage.setItem("statsRange", JSON.stringify({ from: document.getElementById("from").value, to: document.getElementById("to").value })); } catch {} };
+  ["from", "to"].forEach(id => document.getElementById(id).addEventListener("change", save));
+  const _load = load;
+  load = function () { save(); return _load(); };  // "All dates" clears both, then loads
+})();
+renderWho();
+load();
+</script>
+</body>
+</html>

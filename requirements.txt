@@ -1,0 +1,19 @@
+# Web
+flask>=2.3
+
+# Audio / ASR
+pyannote.audio>=3.1
+nemo_toolkit[asr]>=1.23
+torch>=2.1
+torchaudio>=2.1
+
+# LLM
+ollama>=0.2
+
+# CRM database (PostgreSQL)
+sqlalchemy>=2.0
+psycopg[binary]>=3.2
+
+# Utilities
+openpyxl>=3.1
+python-dotenv>=1.0

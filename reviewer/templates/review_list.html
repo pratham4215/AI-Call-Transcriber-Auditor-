@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Kataria Call Review</title>
+{% include "_head.html" %}
+<style>
+.head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin-bottom:12px}
+.head .count{color:var(--t2);font-variant-numeric:tabular-nums}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filters input[type=search]{flex:1 1 150px}
+.filters input.on,.filters select.on{border-color:var(--accent);background:var(--accent-bg)}
+.quick{display:flex;flex-wrap:wrap;gap:6px;margin:0 2px 12px}
+.row{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit}
+.row:first-child{padding-top:0}
+.row:last-child{border-bottom:none;padding-bottom:0}
+.row:hover .reg{color:var(--accent)}
+.body{flex:1;min-width:0}
+.line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.reg{font-weight:700;font-size:14px}
+.type{font-size:11px;font-weight:600;color:var(--t2);background:var(--bg2);border-radius:6px;padding:2px 8px}
+.meta{font-size:12px;color:var(--t2);word-break:break-word}
+.rev{flex-shrink:0;text-align:right;font-size:12px}
+.more{margin-top:12px;text-align:center}
+@media (max-width:640px){.row{align-items:flex-start}.rev{max-width:40%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  {% set page = "list" %}{% include "_bar.html" %}
+  <div class="head"><h1>Audited calls</h1><span class="count" id="count"></span></div>
+  <div class="card filters">
+    <input type="date" id="fDate" aria-label="Call date" onchange="render()">
+    <button class="btn" id="allDates" onclick="document.getElementById('fDate').value='';render()">All dates</button>
+    <select id="fType" aria-label="Call type" onchange="render()">
+      <option value="">All call types</option>
+      <option value="BOOKING">Booking</option>
+      <option value="FOLLOW_UPS">Follow-up</option>
+      <option value="SERVICE_NT_REQUIRED">Service Not Required</option>
+      <option value="ESCALATION">Escalation</option>
+    </select>
+    <select id="fBand" aria-label="Score" onchange="render()">
+      <option value="">All scores</option>
+      <option value="hi">Good · 75+</option>
+      <option value="mid">Average · 60–74</option>
+      <option value="lo">Below 60</option>
+    </select>
+    <select id="fLen" aria-label="Call length" onchange="render()" title="Length of the recording">
+      <option value="">Any length</option>
+      <option value="10-">10 s or longer</option>
+      <option value="20-">20 s or longer</option>
+      <option value="30-">30 s or longer</option>
+      <option value="60-">1 min or longer</option>
+      <option value="-10">Under 10 s</option>
+      <option value="-30">Under 30 s</option>
+    </select>
+    <select id="fCampaign" aria-label="Campaign" onchange="render()">
+      <option value="">All campaigns</option>
+    </select>
+    <select id="fDisposition" aria-label="Disposition" onchange="render()" title="The CRE's outcome in the CRM">
+      <option value="">All dispositions</option>
+    </select>
+    <input type="search" id="fReg" placeholder="Search registration" aria-label="Registration" oninput="render()" autocomplete="off">
+    <input type="search" id="fCre" placeholder="CRE code or name" aria-label="CRE" oninput="render()" autocomplete="off">
+    <input type="search" id="fWorkshop" placeholder="Workshop" aria-label="Workshop" oninput="render()" autocomplete="off">
+    <button class="btn" id="clearBtn" onclick="clearFilters()">Clear filters</button>
+  </div>
+  <div class="quick" id="quick"></div>
+  <div id="error"></div>
+  <div class="card" id="list"><div class="empty"><span class="spin"></span> Loading audited calls…</div></div>
+</div>
+{% include "_common.html" %}
+<script>
+const QUICK = [
+  ["", "All"],
+  ["todo", "Not reviewed"],
+  ["check", "Low AI confidence"],
+  ["fake", "Fake booking / not genuine"],
+  ["progress", "In review"],
+  ["done", "Reviewed"],
+  ["mine", "Reviewed by me"],
+];
+const L = { items: [], quick: "todo", shown: 200 };
+
+function band(i) {
+  if (i.score_pct == null) return "";
+  const p = Number(i.score_pct);
+  return p >= 75 ? "hi" : p >= 60 ? "mid" : "lo";
+}
+function matchesQuick(i) {
+  const r = i.review;
+  switch (L.quick) {
+    case "todo": return !r;
+    case "check": return i.to_check > 0;
+    case "fake": return i.fake_booking;
+    case "progress": return r && r.status === "in_review";
+    case "done": return r && r.status === "reviewed";
+    case "mine": return r && r.reviewer === reviewerName();
+    default: return true;
+  }
+}
+function setQuick(q) {
+  L.quick = q;
+  L.shown = 200;
+  render();
+}
+
+// Date, filters and quick filter stay while moving between pages in this tab;
+// refreshing the page starts over (all dates, Not reviewed).
+const FILTERS = ["fDate", "fType", "fBand", "fLen", "fCampaign", "fDisposition", "fReg", "fCre", "fWorkshop"];
+const DISPOSITION_LABELS = { BOOKED: "Booked", BOOKED_CONFIRMED: "Booking confirmed", FOLLOW_UP: "Follow-up",
+  BOOKED_FOLLOW_UP: "Booked follow-up", NOT_REQUIRED: "Service not required", ESCALATION: "Escalation" };
+const NO_DISPOSITION = "(none)";
+function dispositionLabel(id) {
+  if (id === NO_DISPOSITION) return "Not recorded";
+  return DISPOSITION_LABELS[id] || String(id || "").toLowerCase().replace(/_/g, " ").replace(/^./, c => c.toUpperCase());
+}
+// Disposition choices from the loaded calls, most calls first; a chosen one stays listed.
+function renderDispositions() {
+  const sel = document.getElementById("fDisposition");
+  const counts = new Map();
+  L.items.forEach(i => { const d = i.disposition || NO_DISPOSITION; counts.set(d, (counts.get(d) || 0) + 1); });
+  const current = sel.value;
+  if (current && !counts.has(current)) counts.set(current, 0);
+  sel.innerHTML = `<option value="">All dispositions</option>` + [...counts].sort((a, b) => b[1] - a[1])
+    .map(([d, n]) => `<option value="${x(d)}">${x(dispositionLabel(d))} · ${n.toLocaleString("en-IN")}</option>`).join("");
+  sel.value = current;
+}
+const NO_CAMPAIGN = "(none)";
+// Campaign choices from the loaded calls, most calls first; a chosen one stays listed.
+function renderCampaigns() {
+  const sel = document.getElementById("fCampaign");
+  const counts = new Map();
+  L.items.forEach(i => { const c = i.campaign || NO_CAMPAIGN; counts.set(c, (counts.get(c) || 0) + 1); });
+  const current = sel.value;
+  if (current && !counts.has(current)) counts.set(current, 0);
+  sel.innerHTML = `<option value="">All campaigns</option>` + [...counts].sort((a, b) => b[1] - a[1])
+    .map(([c, n]) => `<option value="${x(c)}">${x(c === NO_CAMPAIGN ? "No campaign" : c)} · ${n.toLocaleString("en-IN")}</option>`).join("");
+  sel.value = current;
+}
+function clearFilters() {
+  FILTERS.forEach(id => { document.getElementById(id).value = ""; });
+  L.shown = 200;
+  render();
+}
+// "10-" = 10 s or longer, "-30" = under 30 s; calls without a known length match only "Any length".
+function inLength(i, value) {
+  if (!value) return true;
+  if (i.call_seconds == null) return false;
+  const [min, max] = value.split("-");
+  return (!min || i.call_seconds >= Number(min)) && (!max || i.call_seconds < Number(max));
+}
+function fmtLen(s) {
+  return s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` : `${s} s`;
+}
+function saveFilters() {
+  const state = { quick: L.quick };
+  FILTERS.forEach(id => { state[id] = document.getElementById(id).value; });
+  try { sessionStorage.setItem("reviewFilters", JSON.stringify(state)); } catch {}
+}
+function restoreFilters() {
+  let state = null;
+  try {
+    if (pageReloaded()) sessionStorage.removeItem("reviewFilters");
+    else state = JSON.parse(sessionStorage.getItem("reviewFilters") || "null");
+  } catch {}
+  if (!state) return;
+  // The campaign list is built from the calls, which load later: keep the saved choice selectable.
+  const camp = document.getElementById("fCampaign");
+  if (state.fCampaign && ![...camp.options].some(o => o.value === state.fCampaign)) camp.add(new Option(state.fCampaign, state.fCampaign));
+  const dsel = document.getElementById("fDisposition");
+  if (state.fDisposition && ![...dsel.options].some(o => o.value === state.fDisposition)) dsel.add(new Option(state.fDisposition, state.fDisposition));
+  FILTERS.forEach(id => { if (typeof state[id] === "string") document.getElementById(id).value = state[id]; });
+  if (QUICK.some(([key]) => key === state.quick)) L.quick = state.quick;
+}
+function reviewTag(r) {
+  if (!r) return `<span class="chip c-none">Not reviewed</span>`;
+  return `<span class="chip ${r.status === "reviewed" ? "c-hi" : "c-mid"}">${r.status === "reviewed" ? "Reviewed" : "In review"}</span>
+    ${r.score_pct != null || r.grade ? `<span title="Score with the reviewer's ratings">${scoreChip(r.score_pct, r.grade)}</span>` : ""}
+    <div class="muted" style="margin-top:3px">${x(r.reviewer)} · ${x(when(r.created_at))}</div>`;
+}
+function rowHtml(i) {
+  const meta = [i.call_date ? dayLabel(i.call_date) : "", i.call_time,
+    i.call_seconds != null ? fmtLen(i.call_seconds) : "",
+    [i.cre_name, i.cre_code ? `(${i.cre_code})` : ""].filter(Boolean).join(" "), i.workshop].filter(Boolean);
+  return `<a class="row" href="/call/${enc(i.stem)}">
+    <div class="body">
+      <div class="line">
+        <span class="reg">${x(i.registration || i.stem)}</span>
+        ${scoreChip(i.score_pct, i.grade)}
+        <span class="type">${x(TYPE_LABEL[i.call_type] || i.call_type || "Other")}</span>
+        ${i.to_check ? `<span class="chip c-mid" title="Ratings the AI was less than 70% sure of">${i.to_check} to check</span>` : ""}
+      </div>
+      <div class="meta">${x(meta.join(" · ") || "No date")}</div>
+    </div>
+    <div class="rev">${reviewTag(i.review)}</div>
+  </a>`;
+}
+function render() {
+  saveFilters();
+  const day = document.getElementById("fDate").value;
+  document.getElementById("allDates").classList.toggle("on", !day);
+  const type = document.getElementById("fType").value;
+  const b = document.getElementById("fBand").value;
+  const len = document.getElementById("fLen").value;
+  const camp = document.getElementById("fCampaign").value;
+  const disp = document.getElementById("fDisposition").value;
+  const text = id => document.getElementById(id).value.trim().toLowerCase();
+  const reg = text("fReg").replace(/[^a-z0-9]/g, ""), cre = text("fCre"), shop = text("fWorkshop");
+  const has = (value, q) => !q || String(value || "").toLowerCase().includes(q);
+  const base = L.items.filter(i => (!day || i.call_date === day) && (!type || i.call_type === type) &&
+    (!b || band(i) === b) && inLength(i, len) && (!camp || (i.campaign || NO_CAMPAIGN) === camp) &&
+    (!disp || (i.disposition || NO_DISPOSITION) === disp) &&
+    (!reg || String(i.registration || "").toLowerCase().replace(/[^a-z0-9]/g, "").includes(reg)) &&
+    (!cre || has(i.cre_name, cre) || has(i.cre_code, cre)) && has(i.workshop, shop));
+  const active = FILTERS.some(id => document.getElementById(id).value.trim());
+  document.getElementById("clearBtn").disabled = !active;
+  FILTERS.forEach(id => document.getElementById(id).classList.toggle("on", !!document.getElementById(id).value.trim()));
+  document.getElementById("quick").innerHTML = QUICK.map(([key, label]) => {
+    const prev = L.quick; L.quick = key;
+    const n = base.filter(matchesQuick).length;
+    L.quick = prev;
+    return `<button class="btn btn-sm ${L.quick === key ? "on" : ""}" onclick="setQuick('${key}')">${label} · ${n.toLocaleString("en-IN")}</button>`;
+  }).join("");
+  const shown = base.filter(matchesQuick);
+  document.getElementById("count").textContent = `${shown.length.toLocaleString("en-IN")} call${shown.length === 1 ? "" : "s"}`;
+  document.getElementById("list").innerHTML = shown.length
+    ? shown.slice(0, L.shown).map(rowHtml).join("") + (shown.length > L.shown
+      ? `<div class="more"><button class="btn" onclick="L.shown += 200; render()">Show more (${(shown.length - L.shown).toLocaleString("en-IN")} left)</button></div>` : "")
+    : `<div class="empty">${L.items.length ? "No calls match these filters." : "No audited calls yet."}</div>`;
+}
+
+async function load() {
+  try {
+    L.items = (await getJSON("/api/calls")).items || [];
+    renderCampaigns();
+    renderDispositions();
+    document.getElementById("error").innerHTML = "";
+  } catch (error) {
+    document.getElementById("error").innerHTML = `<div class="err">Could not load the calls: ${x(error.message)}</div>`;
+  }
+  render();
+}
+
+restoreFilters();
+renderWho();
+askName(false);
+load();
+</script>
+</body>
+</html>

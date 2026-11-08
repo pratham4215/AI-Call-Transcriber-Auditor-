@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Kataria Not Audited</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f6f4ef;--bg2:#efebe3;--surface:#fff;--border:#e1dcd1;
+  --t1:#1c1f24;--t2:#5b6068;--t3:#80858d;
+  --accent:#2f5d8c;--accent-bg:rgba(47,93,140,0.10);
+  --green:#1a7f37;--green-bg:rgba(40,205,65,0.13);
+  --yellow:#a05a00;--yellow-bg:rgba(244,161,0,0.13);
+  --red:#c0392b;--red-bg:rgba(255,59,48,0.11);
+  --shadow:0 1px 3px rgba(60,45,20,0.07),0 6px 20px rgba(60,45,20,0.06);
+}
+body{font:400 13.5px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 48px}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:18px}
+.back{color:var(--accent);text-decoration:none;font-size:13px;font-weight:600}
+h1{font-family:"Source Serif 4",Georgia,serif;font-size:26px;font-weight:700;letter-spacing:-0.01em}
+.pill{margin-left:auto;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700;background:var(--accent-bg);color:var(--accent);white-space:nowrap;font-variant-numeric:tabular-nums}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.day{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.day .label{font-weight:700;margin-left:4px}
+input[type=date],input[type=search]{height:32px;padding:0 9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--t1);font:inherit;font-size:13px;min-width:0}
+input[type=search]{flex:1 1 180px}
+.btn{height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--t1);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn-p{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-p:hover:not(:disabled){opacity:.88;color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-sm{height:28px;padding:0 9px;font-size:12px}
+.section{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin:0 2px 10px}
+.types{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.type{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid var(--border);border-radius:10px;cursor:pointer;font-weight:600;font-size:13px;user-select:none}
+.type:has(input:checked){border-color:var(--accent);background:var(--accent-bg);color:var(--accent)}
+.type .n{font-weight:500;color:var(--t2);font-variant-numeric:tabular-nums}
+.type:has(input:disabled){opacity:.5;cursor:not-allowed}
+.go{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.length-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:-2px 0 16px}
+.length-row label{font-size:12.5px;font-weight:600;color:var(--t2)}
+.length-row select{height:32px;padding:0 9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--t1);font:inherit;font-size:13px}
+.length-row .hint{font-size:12px;color:var(--t3)}
+.call .len{font-variant-numeric:tabular-nums;font-size:12px;color:var(--t2)}
+.go .hint{font-size:12.5px;color:var(--t2)}
+.note{font-size:12.5px;color:var(--accent);background:var(--accent-bg);border-radius:8px;padding:8px 12px;margin-bottom:12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.note a{color:inherit;font-weight:700}
+.err{font-size:12.5px;color:var(--red);background:var(--red-bg);border-radius:8px;padding:8px 12px;margin-bottom:12px;white-space:pre-wrap;word-break:break-word}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);padding:0 10px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+td.num{color:var(--t2)}
+tr.cre{cursor:pointer}
+tr.cre:hover td{background:var(--bg)}
+.cre-name{font-weight:600}
+.cre-code{font-size:11.5px;color:var(--t3)}
+.caret{display:inline-block;width:12px;color:var(--t3);transition:transform 150ms ease}
+tr.open .caret{transform:rotate(90deg)}
+.zero{color:var(--t3)}
+tr.calls td{background:var(--bg);padding:0 10px 10px 32px}
+.call{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px}
+.call:last-child{border-bottom:none}
+.call .t{font-variant-numeric:tabular-nums;color:var(--t2);width:42px}
+.call .reg{font-weight:700;font-size:13px}
+.call .meta{color:var(--t2)}
+.tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;background:var(--bg2);color:var(--t2)}
+.tag-g{background:var(--green-bg);color:var(--green)}
+.empty{color:var(--t3);font-size:13px;padding:6px 0}
+.spin{width:14px;height:14px;border:2px solid rgba(0,0,0,0.15);border-top-color:var(--accent);border-radius:50%;animation:rot .65s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+@media (max-width:640px){
+  th.hide,td.hide{display:none}
+  .pill{margin-left:0}
+  tr.calls td{padding-left:10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="/">← Dashboard</a>
+    <h1>Not audited</h1>
+    <span class="pill" id="count">Loading…</span>
+  </div>
+
+  <div class="card">
+    <div class="day" style="margin-bottom:16px">
+      <button class="btn" onclick="shiftDay(-1)" aria-label="Previous day">‹</button>
+      <input type="date" id="fDate" aria-label="Call date" onchange="setDay(this.value)">
+      <button class="btn" id="nextDay" onclick="shiftDay(1)" aria-label="Next day">›</button>
+      <span class="label" id="dayLabel"></span>
+      <button class="btn btn-sm" style="margin-left:auto" onclick="load()">Refresh</button>
+    </div>
+    <div class="section">Call types to audit</div>
+    <div class="types" id="types"></div>
+    <div class="length-row">
+      <label for="fLength">Call length</label>
+      <select id="fLength" onchange="setLength(this.value)">
+        <option value="">Any length</option>
+        <option value="10-">10 s or longer</option>
+        <option value="20-">20 s or longer</option>
+        <option value="30-">30 s or longer</option>
+        <option value="60-">1 min or longer</option>
+        <option value="-10">Under 10 s</option>
+        <option value="-30">Under 30 s</option>
+      </select>
+      <label for="fCampaign">Campaign</label>
+      <select id="fCampaign" onchange="setCampaign(this.value)">
+        <option value="">All campaigns</option>
+      </select>
+      <label for="fDisposition">Disposition</label>
+      <select id="fDisposition" onchange="setDisposition(this.value)">
+        <option value="">All dispositions</option>
+      </select>
+      <span class="hint">Counts, lists and Audit follow these filters.</span>
+    </div>
+    <div class="go">
+      <button class="btn btn-p" id="auditAll" onclick="audit(null)" disabled>Audit</button>
+      <span class="hint">Downloads, transcribes and audits the ticked call types one after another. Calls already downloaded or transcribed aren't fetched or transcribed again.</span>
+    </div>
+  </div>
+
+  <div id="runNote"></div>
+  <div id="failedNote"></div>
+  <div id="error"></div>
+
+  <div class="tools">
+    <input type="search" id="fCre" placeholder="Find a CRE by code or name" aria-label="CRE" oninput="try { sessionStorage.setItem('naCre', this.value) } catch {}; render()" autocomplete="off">
+  </div>
+  <div class="card" id="list"><div class="empty">Loading…</div></div>
+</div>
+
+<script>
+const TYPES = ["BOOKING", "FOLLOW_UPS", "SERVICE_NT_REQUIRED", "ESCALATION"];
+const LABEL = { BOOKING: "Booking", FOLLOW_UPS: "Follow-up", SERVICE_NT_REQUIRED: "Service Not Required", ESCALATION: "Escalation" };
+const SHORT = { BOOKING: "Booking", FOLLOW_UPS: "Follow-up", SERVICE_NT_REQUIRED: "SNR", ESCALATION: "Escalation" };
+const SEC_PER_CALL = 12;  // download + transcription + Brio audit, roughly
+
+// open: CRE id → { items, hasMore, loading, error } for the expanded CREs.
+const P = { day: null, types: new Set(TYPES), data: null, open: new Map(), request: 0, busy: false, batch: null, length: "", campaign: "", disposition: "" };
+
+function x(s) {
+  if (s == null) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+const enc = encodeURIComponent;
+const fmt = n => Number(n || 0).toLocaleString("en-IN");
+function isoDay(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+const todayIso = () => isoDay(new Date());
+function dayLabel(day) {
+  const d = new Date(`${day}T00:00:00`);
+  return isNaN(d) ? String(day) : d.toLocaleDateString("en-IN", {weekday:"short", day:"numeric", month:"short", year:"numeric"});
+}
+function duration(calls) {
+  const minutes = Math.ceil(calls * SEC_PER_CALL / 60);
+  return minutes >= 60 ? `${(minutes / 60).toFixed(1)} hours` : `${minutes} minute${minutes === 1 ? "" : "s"}`;
+}
+async function getJSON(path, opts) {
+  const r = await fetch(path, { cache: "no-store", ...opts });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+  return data;
+}
+function showError(message) {
+  document.getElementById("error").innerHTML = message ? `<div class="err">${x(message)}</div>` : "";
+}
+// Ticked types and the CRE search stay while moving between pages in this tab; refreshing resets them.
+function saveTypes() {
+  try { sessionStorage.setItem("naTypes", JSON.stringify([...P.types])); } catch {}
+}
+function loadTypes() {
+  try {
+    if (performance.getEntriesByType("navigation")[0]?.type === "reload") {
+      ["naTypes", "naCre"].forEach(k => sessionStorage.removeItem(k));
+      return;
+    }
+    const saved = JSON.parse(sessionStorage.getItem("naTypes") || "null");
+    if (Array.isArray(saved)) P.types = new Set(saved.filter(t => TYPES.includes(t)));
+    document.getElementById("fCre").value = sessionStorage.getItem("naCre") || "";
+  } catch {}
+}
+
+// ── Day ──────────────────────────────────────────────────────────────────────
+function setDay(day) {
+  if (!day || day > todayIso()) { document.getElementById("fDate").value = P.day; return; }
+  P.day = day;
+  history.replaceState(null, "", `/not-audited?date=${enc(day)}`);
+  try { sessionStorage.setItem("dashDay", day); } catch {}  // the same day as the main dashboard
+  load();
+}
+function shiftDay(delta) {
+  const d = new Date(`${P.day}T00:00:00`);
+  d.setDate(d.getDate() + delta);
+  setDay(isoDay(d));
+}
+
+async function load() {
+  const requestId = ++P.request;
+  const pick = document.getElementById("fDate");
+  pick.value = P.day;
+  pick.max = todayIso();
+  document.getElementById("nextDay").disabled = P.day >= todayIso();
+  document.getElementById("dayLabel").textContent = dayLabel(P.day);
+  P.data = null;
+  P.open.clear();
+  render();
+  try {
+    const data = await getJSON(`/api/day?${dayParams()}`);
+    if (requestId !== P.request) return;
+    P.data = data;
+    renderCampaigns();
+    renderDispositions();
+    showError(data.db === false ? "The CRM database isn't connected (VPN / DB settings), so the day's calls can't be listed." : "");
+  } catch (error) {
+    if (requestId !== P.request) return;
+    P.data = { counts: {}, cres: [] };
+    showError(`Could not load the day: ${error.message}`);
+  }
+  render();
+}
+
+// ── Call types ───────────────────────────────────────────────────────────────
+function toggleType(type, on) {
+  if (on) P.types.add(type); else P.types.delete(type);
+  saveTypes();
+  render();
+}
+const chosen = counts => TYPES.filter(t => P.types.has(t) && (counts || {})[t]);
+const chosenTotal = counts => chosen(counts).reduce((n, t) => n + counts[t], 0);
+
+function renderTypes() {
+  const counts = P.data?.counts || {};
+  document.getElementById("types").innerHTML = TYPES.map(t => `<label class="type">
+      <input type="checkbox" ${P.types.has(t) ? "checked" : ""} onchange="toggleType('${t}', this.checked)">
+      ${LABEL[t]} <span class="n">${P.data ? fmt(counts[t]) : "…"}</span></label>`).join("");
+  const n = chosenTotal(counts);
+  const btn = document.getElementById("auditAll");
+  btn.disabled = P.busy || !!P.batch || !n;
+  btn.textContent = n ? `Audit ${fmt(n)} call${n === 1 ? "" : "s"}` : "Audit";
+  btn.title = P.batch ? "A batch is running: stop it or wait for it to end" : "";
+}
+
+// ── CREs and their calls ─────────────────────────────────────────────────────
+function render() {
+  renderTypes();
+  const el = document.getElementById("list");
+  const pill = document.getElementById("count");
+  if (!P.data) {
+    pill.textContent = "Loading…";
+    el.innerHTML = `<div class="empty"><span class="spin"></span> Loading ${x(dayLabel(P.day))}…</div>`;
+    return;
+  }
+  const counts = P.data.counts || {};
+  const all = TYPES.reduce((n, t) => n + (counts[t] || 0), 0);
+  pill.textContent = `${fmt(all)} not audited`;
+  const failed = Number(P.data.failed || 0);
+  document.getElementById("failedNote").innerHTML = failed
+    ? `<div class="note">${fmt(failed)} call${failed === 1 ? "" : "s"} on this day failed and ${failed === 1 ? "is" : "are"} left out here.
+        <a href="/failed?date=${enc(P.day)}">Open Failed calls →</a></div>` : "";
+  const types = TYPES.filter(t => P.types.has(t));
+  const q = document.getElementById("fCre").value.trim().toLowerCase();
+  const cres = (P.data.cres || []).filter(c => chosenTotal(c.counts) > 0 &&
+    (!q || `${c.name || ""} ${c.code || ""}`.toLowerCase().includes(q)));
+  if (!all) { el.innerHTML = `<div class="empty">Every connected call on ${x(dayLabel(P.day))} is audited, or there are none.</div>`; return; }
+  if (!types.length) { el.innerHTML = `<div class="empty">Tick at least one call type.</div>`; return; }
+  if (!cres.length) { el.innerHTML = `<div class="empty">No CRE has calls of the ticked types left${q ? " matching this search" : ""}.</div>`; return; }
+  el.innerHTML = `<table>
+    <thead><tr><th>CRE</th>${types.map(t => `<th class="num hide">${SHORT[t]}</th>`).join("")}<th class="num">Total</th><th></th></tr></thead>
+    <tbody>${cres.map(c => creRows(c, types)).join("")}</tbody></table>`;
+}
+
+function creRows(c, types) {
+  const open = P.open.get(c.id);
+  const total = chosenTotal(c.counts);
+  const idJ = x(JSON.stringify(c.id));
+  const name = c.id === "none" ? "No CRE assigned" : (c.name || c.code || "Unknown CRE");
+  const head = `<tr class="cre ${open ? "open" : ""}" onclick="toggleCre(${idJ})">
+    <td><span class="caret">▸</span> <span class="cre-name">${x(name)}</span>${c.code && c.name ? ` <span class="cre-code">${x(c.code)}</span>` : ""}</td>
+    ${types.map(t => `<td class="num hide">${c.counts[t] ? fmt(c.counts[t]) : `<span class="zero">—</span>`}</td>`).join("")}
+    <td class="num"><b>${fmt(total)}</b></td>
+    <td class="num"><button class="btn btn-sm" onclick="event.stopPropagation();audit(${idJ})" ${P.busy || P.batch ? "disabled" : ""}>Audit</button></td>
+  </tr>`;
+  if (!open) return head;
+  return head + `<tr class="calls"><td colspan="${types.length + 3}">${callsHtml(open)}</td></tr>`;
+}
+
+// The /api/day query for this page: the day's not-audited calls, within the chosen call length.
+function dayParams(extra = {}) {
+  const p = new URLSearchParams({ date: P.day, status: "not_audited" });
+  const [min, max] = String(P.length || "").split("-");
+  if (min) p.set("min_seconds", min);
+  if (max) p.set("max_seconds", max);
+  if (P.campaign) p.set("campaign", P.campaign);
+  if (P.disposition) p.set("disposition", P.disposition);
+  for (const [k, v] of Object.entries(extra)) p.set(k, v);
+  return p;
+}
+function setDisposition(value) {
+  P.disposition = value;
+  try { sessionStorage.setItem("naDisposition", value); } catch {}
+  load();
+}
+const DISPOSITION_LABELS = { BOOKED: "Booked", BOOKED_CONFIRMED: "Booking confirmed", FOLLOW_UP: "Follow-up",
+  BOOKED_FOLLOW_UP: "Booked follow-up", NOT_REQUIRED: "Service not required", ESCALATION: "Escalation" };
+function dispositionLabel(id) {
+  return DISPOSITION_LABELS[id] || String(id || "").toLowerCase().replace(/_/g, " ").replace(/^./, c => c.toUpperCase());
+}
+// The day's CRE outcomes with their not-audited call counts; a chosen one stays listed.
+function renderDispositions() {
+  const sel = document.getElementById("fDisposition");
+  const list = P.data?.dispositions || [];
+  sel.innerHTML = `<option value="">All dispositions</option>` +
+    list.map(d => `<option value="${x(d.id)}">${x(dispositionLabel(d.id))} · ${fmt(d.n)}</option>`).join("") +
+    (P.disposition && !list.some(d => d.id === P.disposition) ? `<option value="${x(P.disposition)}">${x(dispositionLabel(P.disposition))} · 0</option>` : "");
+  sel.value = P.disposition || "";
+}
+function setCampaign(value) {
+  P.campaign = value;
+  try { sessionStorage.setItem("naCampaign", value); } catch {}
+  load();
+}
+// The day's campaigns with their not-audited call counts; a chosen one stays listed.
+function renderCampaigns() {
+  const sel = document.getElementById("fCampaign");
+  const list = P.data?.campaigns || [];
+  const known = list.some(c => c.id === P.campaign);
+  sel.innerHTML = `<option value="">All campaigns</option>` +
+    list.map(c => `<option value="${x(c.id)}">${x(c.name)} · ${fmt(c.n)}</option>`).join("") +
+    (P.campaign && !known ? `<option value="${x(P.campaign)}">Chosen campaign · 0</option>` : "");
+  sel.value = P.campaign || "";
+}
+function setLength(value) {
+  P.length = value;
+  try { sessionStorage.setItem("naLength", value); } catch {}
+  load();
+}
+function fmtLen(s) {
+  return s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` : `${s} s`;
+}
+
+function callsHtml(open) {
+  if (open.error) return `<div class="err" style="margin-top:8px">${x(open.error)}</div>`;
+  const items = open.items.filter(i => P.types.has(i.call_type));
+  const rows = items.map(i => {
+    const t = String(i.call_date || "").slice(11, 16);
+    const local = i.has_transcript ? `<span class="tag tag-g">Transcribed</span>`
+      : i.has_audio ? `<span class="tag tag-g">Downloaded</span>` : "";
+    return `<div class="call">
+      <span class="t">${x(t || "—")}</span>
+      <span class="reg">${x(i.registration_number || "No registration")}</span>
+      <span class="tag">${x(LABEL[i.call_type] || i.call_type)}</span>
+      ${i.call_seconds != null ? `<span class="len" title="Call length">${fmtLen(i.call_seconds)}</span>` : ""}
+      ${local}
+      <span class="meta">${x(i.workshop || "")}</span>
+    </div>`;
+  }).join("");
+  return `${rows || (open.loading ? "" : `<div class="empty">No calls of the ticked types${open.hasMore ? " on this page" : ""}.</div>`)}
+    ${open.loading ? `<div class="empty"><span class="spin"></span> Loading calls…</div>`
+      : open.hasMore ? `<button class="btn btn-sm" style="margin-top:8px" onclick="moreCalls(${x(JSON.stringify(open.id))})">Load more</button>` : ""}`;
+}
+
+function toggleCre(id) {
+  if (P.open.has(id)) { P.open.delete(id); render(); return; }
+  P.open.set(id, { id, items: [], hasMore: true, loading: false, error: null });
+  moreCalls(id);
+}
+
+async function moreCalls(id) {
+  const open = P.open.get(id);
+  if (!open || open.loading) return;
+  const requestId = P.request;
+  open.loading = true;
+  render();
+  try {
+    const r = await getJSON(`/api/day?${dayParams({ cre_id: id, limit: 200, offset: open.items.length })}`);
+    if (requestId !== P.request || P.open.get(id) !== open) return;
+    open.items.push(...(r.items || []));
+    open.hasMore = !!r.has_more;
+  } catch (error) {
+    if (requestId !== P.request || P.open.get(id) !== open) return;
+    open.error = `Could not load the calls: ${error.message}`;
+  }
+  open.loading = false;
+  render();
+}
+
+// ── Audit: the ticked call types of the day, or of one CRE ───────────────────
+async function audit(creId) {
+  if (P.busy || P.batch || !P.data) return;
+  const cre = creId == null ? null : (P.data.cres || []).find(c => c.id === creId);
+  const types = chosen(cre ? cre.counts : P.data.counts);
+  if (!types.length) return;
+  const who = cre ? (cre.id === "none" ? "calls with no CRE" : (cre.name || cre.code || "this CRE")) : "the day";
+  P.busy = true;
+  showError("");
+  render();
+  try {
+    // The ids come from the server: every not-audited call of each ticked type.
+    const ids = [];
+    for (const t of types) {
+      const p = dayParams({ ids_only: "1", call_type: t });
+      if (cre) p.set("cre_id", cre.id);
+      ids.push(...((await getJSON(`/api/day?${p}`)).ids || []));
+    }
+    if (!ids.length) { showError(`Nothing left to audit for ${who} on ${dayLabel(P.day)}.`); return; }
+    const ok = confirm(`Audit ${fmt(ids.length)} call${ids.length === 1 ? "" : "s"} of ${who} on ${dayLabel(P.day)}?\n\n` +
+      `${types.map(t => LABEL[t]).join(", ")}.\nThey run one after another, roughly ${duration(ids.length)}. ` +
+      `Calls already downloaded or transcribed aren't fetched or transcribed again.`);
+    if (!ok) return;
+    const r = await getJSON("/api/db/run", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date: P.day, transaction_ids: ids, reaudit: false }),
+    });
+    await followRun(r.job_id);
+  } catch (error) {
+    showError(`Could not start the audit: ${error.message}`);
+  } finally {
+    P.busy = false;
+    render();
+  }
+}
+
+// The run first downloads the calls it doesn't have, then hands them to a batch.
+async function followRun(jobId) {
+  const note = document.getElementById("runNote");
+  for (;;) {
+    const j = await getJSON(`/api/job/${enc(jobId)}`);
+    if (j.status === "running" || j.status === "queued") {
+      note.innerHTML = `<div class="note"><span class="spin"></span> ${x(j.progress || "Working…")}</div>`;
+      await new Promise(done => setTimeout(done, 2000));
+      continue;
+    }
+    if (j.status !== "done") throw new Error(j.error || j.status || "unknown error");
+    note.innerHTML = `<div class="note">${x(j.progress || "Done")}${j.batch_id
+      ? ` <a href="/batch?id=${enc(j.batch_id)}">Open batch →</a>` : ""}</div>`;
+    checkBatch();
+    return;
+  }
+}
+
+// A running batch blocks new audits until it ends or is stopped (checked every 5 s).
+async function checkBatch() {
+  clearTimeout(P.batchTimer);
+  let b = {};
+  try { b = await getJSON("/api/batch/latest"); } catch (error) { /* treat as idle */ }
+  const was = P.batch;
+  P.batch = b.status === "running" ? b : null;
+  if (P.batch && !P.busy) {
+    document.getElementById("runNote").innerHTML = `<div class="note"><span class="spin"></span>
+      ${b.stopping ? "Batch stopping after this call" : "A batch is running"} · ${fmt(b.done)}/${fmt(b.total)} done.
+      <a href="/batch?id=${enc(b.batch_id)}">Open batch →</a>
+      ${b.stopping ? "" : `<button class="btn btn-sm" style="color:var(--red)" onclick="stopBatch(${x(JSON.stringify(b.batch_id))})">Stop batch</button>`}</div>`;
+  } else if (was && !P.batch) {
+    document.getElementById("runNote").innerHTML = "";
+    load();  // audited calls drop off the list
+  }
+  render();
+  if (P.batch) P.batchTimer = setTimeout(checkBatch, 5000);
+}
+
+async function stopBatch(batchId) {
+  if (!confirm("Stop the batch? The call in progress finishes first; the calls still waiting are not run.")) return;
+  try {
+    await getJSON(`/api/batch/${enc(batchId)}/stop`, { method: "POST" });
+  } catch (error) {
+    showError(`Could not stop the batch: ${error.message}`);
+  }
+  checkBatch();
+}
+
+loadTypes();
+// The length filter stays while moving between pages in this tab; refreshing resets it.
+try {
+  if (performance.getEntriesByType("navigation")[0]?.type === "reload") sessionStorage.removeItem("naLength");
+  const kept = sessionStorage.getItem("naLength") || "";
+  if ([...document.getElementById("fLength").options].some(o => o.value === kept)) P.length = kept;
+  if (performance.getEntriesByType("navigation")[0]?.type === "reload") sessionStorage.removeItem("naCampaign");
+  P.campaign = sessionStorage.getItem("naCampaign") || "";
+  if (performance.getEntriesByType("navigation")[0]?.type === "reload") sessionStorage.removeItem("naDisposition");
+  P.disposition = sessionStorage.getItem("naDisposition") || "";
+} catch {}
+document.getElementById("fLength").value = P.length || "";
+// The day comes from the link, else the main dashboard's day in this tab; refreshing goes back to yesterday.
+P.day = (() => {
+  const yesterday = isoDay(new Date(Date.now() - 86400000));
+  const ok = d => d && /^\d{4}-\d{2}-\d{2}$/.test(d) && d <= todayIso();
+  try {
+    if (performance.getEntriesByType("navigation")[0]?.type === "reload") { sessionStorage.removeItem("dashDay"); return yesterday; }
+    const asked = new URLSearchParams(location.search).get("date"), kept = sessionStorage.getItem("dashDay");
+    return ok(asked) ? asked : ok(kept) ? kept : yesterday;
+  } catch { return yesterday; }
+})();
+try { sessionStorage.setItem("dashDay", P.day); } catch {}
+history.replaceState(null, "", `/not-audited?date=${enc(P.day)}`);
+load();
+checkBatch();
+</script>
+</body>
+</html>

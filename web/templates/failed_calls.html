@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Kataria Failed Calls</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f6f4ef;--bg2:#efebe3;--surface:#fff;--border:#e1dcd1;
+  --t1:#1c1f24;--t2:#5b6068;--t3:#80858d;
+  --accent:#2f5d8c;--accent-bg:rgba(47,93,140,0.10);
+  --green:#1a7f37;--green-bg:rgba(40,205,65,0.13);
+  --yellow:#a05a00;--yellow-bg:rgba(244,161,0,0.13);
+  --red:#c0392b;--red-bg:rgba(255,59,48,0.11);
+  --shadow:0 1px 3px rgba(60,45,20,0.07),0 6px 20px rgba(60,45,20,0.06);
+}
+body{font:400 13.5px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 48px}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:18px}
+.back{color:var(--accent);text-decoration:none;font-size:13px;font-weight:600}
+h1{font-family:"Source Serif 4",Georgia,serif;font-size:26px;font-weight:700;letter-spacing:-0.01em}
+.pill{margin-left:auto;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700;background:var(--red-bg);color:var(--red);white-space:nowrap;font-variant-numeric:tabular-nums}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+input[type=date],input[type=search],select{height:32px;padding:0 9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--t1);font:inherit;font-size:13px;min-width:0}
+input[type=search]{flex:1 1 180px}
+.btn{height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--t1);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.btn-p{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-p:hover:not(:disabled){opacity:.88;color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-sm{height:28px;padding:0 9px;font-size:12px}
+.bulk{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 2px 10px;font-size:12.5px;color:var(--t2)}
+.bulk label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.note{font-size:12.5px;color:var(--accent);background:var(--accent-bg);border-radius:8px;padding:8px 12px;margin-bottom:10px}
+.note a{color:inherit;font-weight:700}
+.err{font-size:12.5px;color:var(--red);background:var(--red-bg);border-radius:8px;padding:8px 12px;margin-bottom:10px;white-space:pre-wrap;word-break:break-word}
+.row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.row:first-child{padding-top:0}
+.row:last-child{border-bottom:none;padding-bottom:0}
+.row>input{margin-top:4px;flex-shrink:0;align-self:flex-start}
+.body{flex:1;min-width:0}
+.head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.reg{font-weight:700;font-size:14px}
+.meta{font-size:12px;color:var(--t2);word-break:break-word}
+.chip{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
+.chip-r{background:var(--red-bg);color:var(--red)}
+.type{font-size:11px;font-weight:600;color:var(--t2);background:var(--bg2);border-radius:6px;padding:2px 8px;white-space:nowrap}
+.reason{font-size:12.5px;color:var(--red);margin-top:4px;word-break:break-word}
+details{margin-top:4px}
+summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--accent);width:max-content}
+pre{margin-top:6px;padding:10px;background:var(--bg);border-radius:8px;font:12px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word;color:var(--t2)}
+.acts{display:flex;align-items:flex-start;gap:6px;flex-shrink:0}
+.empty{color:var(--t3);font-size:13px;padding:6px 0}
+@media (max-width:640px){.row{flex-wrap:wrap}.body{flex-basis:calc(100% - 30px)}.acts{margin-left:25px}.pill{margin-left:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="/">← Dashboard</a>
+    <h1>Failed calls</h1>
+    <span class="pill" id="count">Loading…</span>
+  </div>
+  <div class="card filters">
+    <input type="date" id="fDate" aria-label="Call date" onchange="loadItems()">
+    <button class="btn" id="allDates" onclick="document.getElementById('fDate').value='';loadItems()">All dates</button>
+    <select id="fPhase" aria-label="Failed step" onchange="render()">
+      <option value="">Transcription and audit</option>
+      <option value="audit">Audit failed</option>
+      <option value="transcription">Transcription failed</option>
+    </select>
+    <input type="search" id="fText" placeholder="Registration, CRE or reason" aria-label="Search" oninput="render()" autocomplete="off">
+  </div>
+  <div id="batchNote"></div>
+  <div id="error"></div>
+  <div class="bulk">
+    <label><input type="checkbox" id="selAll" onchange="selectAll(this.checked)"> Select all shown</label>
+    <span id="selCount">0 selected</span>
+    <button class="btn btn-p" id="bulkBtn" onclick="retry([...F.sel])" disabled>Retry selected</button>
+  </div>
+  <div class="card" id="list"><div class="empty">Loading failed calls…</div></div>
+</div>
+
+<script>
+const TYPES = { BOOKING: "Booking", FOLLOW_UPS: "Follow-up", SERVICE_NT_REQUIRED: "Service Not Required", ESCALATION: "Escalation" };
+const F = { items: [], shown: [], sel: new Set(), busy: false, request: 0 };
+
+function x(s) {
+  if (s == null) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function dayLabel(day) {
+  const d = new Date(`${day}T00:00:00`);
+  return isNaN(d) ? String(day) : d.toLocaleDateString("en-IN", {weekday:"short", day:"numeric", month:"short", year:"numeric"});
+}
+async function getJSON(path, opts) {
+  const r = await fetch(path, { cache: "no-store", ...opts });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+  return data;
+}
+function showError(message) {
+  document.getElementById("error").innerHTML = message ? `<div class="err">${x(message)}</div>` : "";
+}
+
+async function loadItems() {
+  const day = document.getElementById("fDate").value;
+  document.getElementById("allDates").classList.toggle("on", !day);
+  if (day) history.replaceState(null, "", `/failed?date=${encodeURIComponent(day)}`);
+  else history.replaceState(null, "", "/failed");
+  const requestId = ++F.request;
+  try {
+    const data = await getJSON(`/api/failed${day ? `?date=${encodeURIComponent(day)}` : ""}`);
+    if (requestId !== F.request) return;
+    F.items = data.items || [];
+    showError("");
+  } catch (error) {
+    if (requestId !== F.request) return;
+    F.items = [];
+    showError(`Could not load failed calls: ${error.message}`);
+  }
+  render();
+}
+
+function rowHtml(i) {
+  const stem = x(i.stem);
+  const when = [i.call_date ? dayLabel(i.call_date) : "", i.call_time || ""].filter(Boolean).join(" · ");
+  const cre = [i.cre_name, i.cre_code ? `(${i.cre_code})` : ""].filter(Boolean).join(" ");
+  const failedAt = i.failed_at ? new Date(i.failed_at * 1000).toLocaleString("en-IN", {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"}) : "";
+  return `<div class="row">
+    <input type="checkbox" data-sel="${stem}" ${F.sel.has(i.stem) ? "checked" : ""} aria-label="Select ${x(i.registration || i.stem)}">
+    <div class="body">
+      <div class="head">
+        <span class="reg">${x(i.registration || i.stem)}</span>
+        <span class="chip chip-r">${i.phase === "transcription" ? "Transcription failed" : "Audit failed"}</span>
+        <span class="type">${x(TYPES[i.call_type] || "Other")}</span>
+        ${i.attempts > 1 ? `<span class="meta">${Number(i.attempts)} attempts</span>` : ""}
+      </div>
+      <div class="meta">${x(when || "No date")}${cre ? ` · ${x(cre)}` : ""}${i.workshop ? ` · ${x(i.workshop)}` : ""}${failedAt ? ` · failed ${x(failedAt)}` : ""}</div>
+      <div class="reason">${x(i.reason || "Failed")}</div>
+      ${i.log ? `<details><summary>Full log</summary><pre>${x(i.log)}</pre></details>` : ""}
+    </div>
+    <div class="acts">
+      <button class="btn btn-sm" data-retry="${stem}" ${F.busy ? "disabled" : ""}>Retry</button>
+      <a class="btn btn-sm" href="/?stem=${encodeURIComponent(i.stem)}">Open</a>
+    </div>
+  </div>`;
+}
+function render() {
+  const phase = document.getElementById("fPhase").value;
+  const q = document.getElementById("fText").value.trim().toLowerCase();
+  F.shown = F.items.filter(i => (!phase || i.phase === phase) &&
+    (!q || `${i.registration || ""} ${i.cre_name || ""} ${i.cre_code || ""} ${i.reason || ""}`.toLowerCase().includes(q)));
+  const shownStems = new Set(F.shown.map(i => i.stem));
+  for (const stem of [...F.sel]) if (!shownStems.has(stem)) F.sel.delete(stem);
+  const day = document.getElementById("fDate").value;
+  document.getElementById("count").textContent = `${F.shown.length} failed`;
+  document.getElementById("list").innerHTML = F.shown.length
+    ? F.shown.map(rowHtml).join("")
+    : `<div class="empty">${F.items.length ? "No failed calls match these filters." : `No failed calls${day ? ` on ${x(dayLabel(day))}` : ""}.`}</div>`;
+  updateBulk();
+}
+function updateBulk() {
+  const n = F.sel.size;
+  document.getElementById("selCount").textContent = `${n} selected`;
+  document.getElementById("bulkBtn").disabled = F.busy || !n;
+  const all = document.getElementById("selAll");
+  all.checked = n > 0 && n === F.shown.length;
+  all.indeterminate = n > 0 && n < F.shown.length;
+  all.disabled = !F.shown.length;
+}
+function selectAll(on) {
+  F.sel = new Set(on ? F.shown.map(i => i.stem) : []);
+  document.querySelectorAll("[data-sel]").forEach(box => { box.checked = on; });
+  updateBulk();
+}
+document.getElementById("list").addEventListener("click", e => {
+  const one = e.target.closest("[data-retry]");
+  if (one) retry([one.dataset.retry]);
+});
+document.getElementById("list").addEventListener("change", e => {
+  const box = e.target.closest("[data-sel]");
+  if (!box) return;
+  if (box.checked) F.sel.add(box.dataset.sel); else F.sel.delete(box.dataset.sel);
+  updateBulk();
+});
+
+// Retry: transcription (skipped when a transcript exists) and audit again, through the batch runner.
+// A call that fails again stays here with one more attempt; one that succeeds leaves the list.
+async function retry(stems) {
+  if (!stems.length || F.busy) return;
+  setBusy(true);
+  showError("");
+  try {
+    const data = await getJSON("/api/batch", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stems, mode: "both" }),
+    });
+    location.href = `/batch?id=${encodeURIComponent(data.batch_id)}`;
+  } catch (error) {
+    showError(`Retry failed to start: ${error.message}`);
+    setBusy(false);
+  }
+}
+function setBusy(on) {
+  F.busy = on;
+  document.querySelectorAll("[data-retry]").forEach(btn => { btn.disabled = on; });
+  updateBulk();
+}
+
+// A batch already running blocks retries until it ends (checked every 5 s).
+async function checkBatch() {
+  let b = {};
+  try { b = await getJSON("/api/batch/latest"); } catch (error) { /* treat as idle */ }
+  const running = b.status === "running";
+  const was = F.batchRunning;
+  F.batchRunning = running;
+  document.getElementById("batchNote").innerHTML = running
+    ? `<div class="note">A batch is running (${Number(b.done)}/${Number(b.total)} done). Retry is available when it ends. <a href="/batch?id=${encodeURIComponent(b.batch_id)}">Open batch →</a></div>`
+    : "";
+  setBusy(running);
+  if (running) setTimeout(checkBatch, 5000);
+  else if (was) loadItems();  // the batch just ended: it may have cleared or added failures
+}
+
+// Filters stay while moving between pages in this tab; refreshing the page clears them.
+// A date in the link (from Not audited) wins over the kept one.
+(function keepFilters(key, ids) {
+  const reloaded = performance.getEntriesByType("navigation")[0]?.type === "reload";
+  try {
+    if (reloaded) sessionStorage.removeItem(key);
+    const state = JSON.parse(sessionStorage.getItem(key) || "{}");
+    ids.forEach(id => { if (typeof state[id] === "string") document.getElementById(id).value = state[id]; });
+  } catch {}
+  const asked = reloaded ? null : new URLSearchParams(location.search).get("date");
+  if (asked && /^\d{4}-\d{2}-\d{2}$/.test(asked)) document.getElementById("fDate").value = asked;
+  const save = () => { try { sessionStorage.setItem(key, JSON.stringify(Object.fromEntries(ids.map(id => [id, document.getElementById(id).value])))); } catch {} };
+  ids.forEach(id => ["input", "change"].forEach(ev => document.getElementById(id).addEventListener(ev, save)));
+  document.getElementById("allDates").addEventListener("click", () => setTimeout(save));
+  save();
+})("failedFilters", ["fDate", "fPhase", "fText"]);
+checkBatch();
+loadItems();
+</script>
+</body>
+</html>

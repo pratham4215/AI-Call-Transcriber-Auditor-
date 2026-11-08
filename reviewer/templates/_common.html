@@ -1,0 +1,166 @@
+<script>
+// Shared by the reviewer pages: escaping, labels, fetch, and the reviewer's name.
+const TYPE_LABEL = { BOOKING: "Booking", FOLLOW_UPS: "Follow-up", SERVICE_NT_REQUIRED: "Service Not Required", ESCALATION: "Escalation" };
+const SECTIONS = [
+  ["Opening",["greet","introduce","confirm_vehicle_name","inform_recording","reason_for_call","permission_to_talk"]],
+  ["Product & Service Knowledge",["prev_service_info","ask_kms","current_service_info","cost_estimate","warranty_info","pickup_drop","booking_details"]],
+  ["Customer Handling",["listen_understand","dissatisfaction_inquiry","info_gathering","reason_snr","professionalism","conflict_mgmt","higher_billing"]],
+  ["Software / CRM",["dms_validation","remarks_tagging","proper_tagging","task_crm"]],
+  ["Closing",["future_service","standard_comm","thank_you"]],
+];
+const PL = {
+  greet:"Clear opening greeting",introduce:"CRE introduction & dealership name",
+  confirm_vehicle_name:"Vehicle number & customer name confirmed",inform_recording:"Call recording disclosure",
+  reason_for_call:"Reason for call stated",permission_to_talk:"Permission to talk",
+  prev_service_info:"Previous service information",ask_kms:"Current KMS asked",
+  current_service_info:"Current service info (tenure / mileage)",cost_estimate:"Cost estimate provided",
+  warranty_info:"OEM / EW / MCP warranty pitched",pickup_drop:"Free pick & drop offered",
+  booking_details:"Booking date, time and address confirmed",listen_understand:"Customer need listened & understood",
+  dissatisfaction_inquiry:"Dissatisfaction inquiry",info_gathering:"Information gathering & solution offered",
+  reason_snr:"Reason for SNR captured",professionalism:"Professionalism & demeanor",
+  conflict_mgmt:"Conflict management",higher_billing:"Higher billing explained",
+  dms_validation:"DMS validation",remarks_tagging:"Customer & CRE remarks entered",
+  proper_tagging:"Proper tagging applied",task_crm:"CRM task managed correctly",
+  future_service:"Future service follow-up",standard_comm:"Communication per standards",
+  thank_you:"Professional thank-you close",
+};
+
+function x(s) {
+  if (s == null) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+const enc = encodeURIComponent;
+function dayLabel(day) {
+  const d = new Date(`${day}T00:00:00`);
+  return isNaN(d) ? String(day || "") : d.toLocaleDateString("en-IN", {weekday:"short", day:"numeric", month:"short", year:"numeric"});
+}
+function when(ts) {
+  return new Date(ts * 1000).toLocaleString("en-IN", {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"});
+}
+function scoreChip(pct, grade) {
+  if (grade === "Not Genuine") return `<span class="chip c-lo">Not genuine</span>`;
+  if (pct == null) return `<span class="chip c-none">No score</span>`;
+  const p = Number(pct);
+  return `<span class="chip ${p >= 75 ? "c-hi" : p >= 60 ? "c-mid" : "c-lo"}">${Math.round(p)}%</span>`;
+}
+async function getJSON(path, opts) {
+  const r = await fetch(path, { cache: "no-store", ...opts });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+  return data;
+}
+
+// True when the page was opened by refreshing it (F5 / reload), not by a link or Back.
+// Filters reset only then; otherwise each page picks up where this tab left it.
+function pageReloaded() {
+  try { return performance.getEntriesByType("navigation")[0]?.type === "reload"; } catch { return false; }
+}
+
+// ── Reviewer name: typed once, kept in this browser ──
+function reviewerName() {
+  try { return localStorage.getItem("reviewerName") || ""; } catch { return ""; }
+}
+function askName(force) {
+  return new Promise(resolve => {
+    const current = reviewerName();
+    if (current && !force) { resolve(current); return; }
+    const bg = document.createElement("div");
+    bg.className = "modal-bg";
+    bg.innerHTML = `<form class="modal">
+      <h2>Your name</h2>
+      <p>Reviews are saved under this name. It stays in this browser until you change it.</p>
+      <input type="text" name="n" maxlength="60" autocomplete="name" value="${x(current)}" required>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        ${current ? `<button type="button" class="btn" data-cancel>Cancel</button>` : ""}
+        <button class="btn btn-p">Continue</button>
+      </div></form>`;
+    document.body.appendChild(bg);
+    const input = bg.querySelector("input");
+    setTimeout(() => input.focus(), 30);
+    bg.querySelector("[data-cancel]")?.addEventListener("click", () => { bg.remove(); resolve(current); });
+    bg.querySelector("form").addEventListener("submit", e => {
+      e.preventDefault();
+      const name = input.value.trim().replace(/\s+/g, " ");
+      if (name.length < 2) { input.focus(); return; }
+      try { localStorage.setItem("reviewerName", name); } catch {}
+      bg.remove();
+      renderWho();
+      resolve(name);
+    });
+  });
+}
+function renderWho() {
+  const el = document.getElementById("who");
+  if (!el) return;
+  const admin = IS_ADMIN
+    ? `<span class="chip c-b" title="Signed in as admin on this browser">Admin</span> <button class="link" onclick="adminSignOut()">Sign out</button>`
+    : `<button class="link muted-link" onclick="adminSignIn()">Admin</button>`;
+  el.innerHTML = (reviewerName()
+    ? `Reviewing as <b>${x(reviewerName())}</b> <button class="link" onclick="askName(true)">Change</button>`
+    : `<button class="link" onclick="askName(true)">Enter your name</button>`) + ` <span class="sep">·</span> ${admin}`;
+}
+
+// ── Admin: the admin PIN, checked on the server; this browser stays signed in for 30 days ──
+const IS_ADMIN = {{ 'true' if is_admin else 'false' }};
+function adminSignIn() {
+  if (document.querySelector(".modal-bg")) return;
+  document.activeElement?.blur();
+  const bg = document.createElement("div");
+  bg.className = "modal-bg";
+  bg.innerHTML = `<form class="modal">
+    <h2>Admin sign-in</h2>
+    <p>Enter the admin PIN. This browser stays signed in as admin until you sign out.</p>
+    <input type="password" inputmode="numeric" autocomplete="off" placeholder="Admin PIN" required>
+    <div class="pin-msg" style="color:var(--red);font-size:12.5px;margin:-6px 0 10px" hidden></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button type="button" class="btn" data-cancel>Cancel</button>
+      <button class="btn btn-p">Sign in</button>
+    </div></form>`;
+  document.body.appendChild(bg);
+  const input = bg.querySelector("input"), msg = bg.querySelector(".pin-msg");
+  input.focus();
+  bg.querySelector("[data-cancel]").onclick = () => bg.remove();
+  bg.addEventListener("keydown", e => { if (e.key === "Escape") bg.remove(); });
+  bg.querySelector("form").onsubmit = async e => {
+    e.preventDefault();
+    try {
+      await getJSON("/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: input.value, reviewer: reviewerName() }) });
+      location.reload();
+    } catch (error) {
+      msg.hidden = false;
+      msg.textContent = error.message;
+      input.select();
+    }
+  };
+}
+async function adminSignOut() {
+  try { await getJSON("/api/admin/logout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reviewer: reviewerName() }) }); } catch {}
+  location.href = "/";
+}
+
+// ── Presence: tell the server which page this tab is on, every 20 s while open ──
+const TAB_ID = (() => {
+  try {
+    let id = sessionStorage.getItem("tabId");
+    if (!id) { id = (crypto.randomUUID?.() || String(Math.random()).slice(2) + Date.now()); sessionStorage.setItem("tabId", id); }
+    return id;
+  } catch { return String(Math.random()).slice(2) + Date.now(); }
+})();
+function presence() {
+  const path = location.pathname;
+  const page = path.startsWith("/call/") ? "call" : path === "/stats" ? "stats" : path === "/admin" ? "admin" : "list";
+  const stem = page === "call" ? decodeURIComponent(path.slice(6)) : null;
+  return { tab: TAB_ID, page, stem, reviewer: reviewerName() };
+}
+function ping() {
+  fetch("/api/ping", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(presence()), keepalive: true })
+    .catch(() => {});
+}
+ping();
+setInterval(() => { if (document.visibilityState === "visible") ping(); }, 20000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") ping(); });
+window.addEventListener("pagehide", () => {
+  try { navigator.sendBeacon("/api/leave", new Blob([JSON.stringify({ tab: TAB_ID })], { type: "application/json" })); } catch {}
+});
+</script>

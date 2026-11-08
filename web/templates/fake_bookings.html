@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Kataria Fake Bookings</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f6f4ef;--bg2:#efebe3;--surface:#fff;--border:#e1dcd1;
+  --t1:#1c1f24;--t2:#5b6068;--t3:#80858d;
+  --accent:#2f5d8c;--accent-bg:rgba(47,93,140,0.10);
+  --green:#1a7f37;--green-bg:rgba(40,205,65,0.13);
+  --yellow:#a05a00;--yellow-bg:rgba(244,161,0,0.13);
+  --red:#c0392b;--red-bg:rgba(255,59,48,0.11);
+  --shadow:0 1px 3px rgba(60,45,20,0.07),0 6px 20px rgba(60,45,20,0.06);
+}
+body{font:400 13.5px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 48px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.back{color:var(--accent);text-decoration:none;font-size:13px;font-weight:600}
+h1{font-family:"Source Serif 4",Georgia,serif;font-size:26px;font-weight:700;letter-spacing:-0.01em}
+.pill{margin-left:auto;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700;background:var(--red-bg);color:var(--red);white-space:nowrap}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+input[type=date],input[type=search],select{height:32px;padding:0 9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--t1);font:inherit;font-size:13px;min-width:0}
+input[type=search]{flex:1 1 180px}
+.btn{height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--t1);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.btn-p{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-p:hover:not(:disabled){opacity:.88;color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-sm{height:28px;padding:0 9px;font-size:12px}
+.play{width:28px;padding:0}
+.bulk{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 2px 10px;font-size:12.5px;color:var(--t2)}
+.bulk label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.bulk .btn{margin-left:auto}
+.note{font-size:12.5px;color:var(--accent);background:var(--accent-bg);border-radius:8px;padding:8px 12px;margin-bottom:10px}
+.note a{color:inherit;font-weight:700}
+.err{font-size:12.5px;color:var(--red);background:var(--red-bg);border-radius:8px;padding:8px 12px;margin-bottom:10px;white-space:pre-wrap;word-break:break-word}
+.row{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
+.row:first-child{padding-top:0}
+.row:last-child{border-bottom:none;padding-bottom:0}
+.row>input{margin-top:4px;flex-shrink:0;align-self:flex-start}
+.body{flex:1;min-width:0}
+.head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.reg{font-weight:700;font-size:14px}
+.meta{font-size:12px;color:var(--t2)}
+.chip{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;background:var(--red-bg);color:var(--red)}
+.conf{font-size:11px;font-weight:600;color:var(--t3);font-variant-numeric:tabular-nums}
+.why{margin-top:5px;color:var(--t1);word-break:break-word}
+details{margin-top:6px}
+summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--accent);width:max-content;max-width:100%}
+.turns{margin-top:8px;padding:10px 12px;background:var(--bg);border-radius:10px}
+.turns-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin:8px 0 4px}
+.turns-label:first-child{margin-top:0}
+.turn{font-size:12.5px;line-height:1.55;word-break:break-word}
+.turn b{font-weight:600}
+.tid{font-size:11px;color:var(--t3);font-variant-numeric:tabular-nums}
+.acts{display:flex;align-items:flex-start;gap:6px;flex-shrink:0}
+.empty{color:var(--t3);font-size:13px;padding:6px 0}
+
+@media (max-width:640px){
+  .row{flex-wrap:wrap}
+  .body{flex-basis:calc(100% - 30px)}
+  .acts{margin-left:25px}
+  .bulk .btn{margin-left:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="/">← Dashboard</a>
+    <h1>Fake bookings</h1>
+    <span class="pill" id="count">Loading…</span>
+  </div>
+  <div class="card filters">
+    <input type="date" id="fDate" aria-label="Call date" onchange="loadItems()">
+    <button class="btn" id="allDates" onclick="allDates()">All dates</button>
+    <select id="fReason" aria-label="Reason" onchange="render()"><option value="">Any reason</option></select>
+    <input type="search" id="fCre" placeholder="CRE code or name" aria-label="CRE" oninput="render()" autocomplete="off">
+  </div>
+  <div id="batchNote"></div>
+  <div id="error"></div>
+  <div class="bulk">
+    <label><input type="checkbox" id="selAll" onchange="selectAll(this.checked)"> Select all shown</label>
+    <span id="selCount">0 selected</span>
+    <button class="btn btn-p" id="bulkBtn" onclick="reaudit([...F.sel])" disabled>Re-audit selected</button>
+  </div>
+  <div class="card" id="list"><div class="empty">Loading fake bookings…</div></div>
+</div>
+
+<script>
+const REASONS = {
+  conditional_or_vague_booking: "Conditional / vague", conditional_callback: "Conditional / vague",
+  no_customer_agreement: "No customer agreement", explicit_decline: "Explicit decline",
+  cancelled: "Cancelled", explicit_cancellation: "Cancelled",
+  customer_disputed_booking: "Disputed", disputed: "Disputed",
+  no_booking_discussion: "No booking discussion", agent_only_claim: "Agent-only claim",
+  no_concrete_date: "No concrete date",
+};
+const F = { items: [], shown: [], sel: new Set(), busy: false, playing: null, request: 0 };
+const AUD = new Audio();
+
+function x(s) {
+  if (s == null) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function reasonLabel(code) {
+  if (!code) return "Not genuine";
+  return REASONS[code] || String(code).replace(/_/g, " ").replace(/^./, c => c.toUpperCase());
+}
+function dayLabel(day) {
+  const d = new Date(`${day}T00:00:00`);
+  return isNaN(d) ? String(day) : d.toLocaleDateString("en-IN", {weekday:"short", day:"numeric", month:"short", year:"numeric"});
+}
+async function getJSON(path) {
+  const r = await fetch(path, { cache: "no-store" });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+  return data;
+}
+function showError(message) {
+  document.getElementById("error").innerHTML = message ? `<div class="err">${x(message)}</div>` : "";
+}
+
+// ── Load (one day, or all dates) ─────────────────────────────────────────────
+async function loadItems() {
+  const day = document.getElementById("fDate").value;
+  document.getElementById("allDates").classList.toggle("on", !day);
+  const requestId = ++F.request;
+  try {
+    const data = await getJSON(`/api/fake-bookings${day ? `?date=${encodeURIComponent(day)}` : ""}`);
+    if (requestId !== F.request) return;
+    F.items = data.items || [];
+    showError("");
+  } catch (error) {
+    if (requestId !== F.request) return;
+    F.items = [];
+    showError(`Could not load fake bookings: ${error.message}`);
+  }
+  const select = document.getElementById("fReason");
+  const current = select.value;
+  const labels = [...new Set(F.items.map(i => reasonLabel(i.reason)))].sort();
+  select.innerHTML = `<option value="">Any reason</option>` + labels.map(l => `<option value="${x(l)}">${x(l)}</option>`).join("");
+  select.value = labels.includes(current) ? current : "";
+  render();
+}
+function allDates() {
+  document.getElementById("fDate").value = "";
+  loadItems();
+}
+
+// ── List ─────────────────────────────────────────────────────────────────────
+function turnHtml(t, speaker) {
+  return `<div class="turn"><b>${x(speaker)}</b> <span class="tid">${x(t.id)}</span> ${x(t.text)}</div>`;
+}
+function rowHtml(i) {
+  const stem = x(i.stem);
+  const when = [i.call_date ? dayLabel(i.call_date) : "", i.call_time || ""].filter(Boolean).join(" · ");
+  const cre = [i.cre_name, i.cre_code ? `(${i.cre_code})` : ""].filter(Boolean).join(" ");
+  const conf = i.confidence != null ? `<span class="conf" title="Model confidence">${Math.round(Number(i.confidence) * 100)}%</span>` : "";
+  const cited = (i.cited || []).map(t => turnHtml(t, t.speaker)).join("");
+  const last = (i.last_customer || []).map(t => turnHtml(t, "Customer")).join("");
+  const playing = F.playing === i.stem && !AUD.paused;
+  return `<div class="row">
+    <input type="checkbox" data-sel="${stem}" ${F.sel.has(i.stem) ? "checked" : ""} aria-label="Select ${x(i.registration)}">
+    <div class="body">
+      <div class="head">
+        <span class="reg">${x(i.registration || i.stem)}</span>
+        <span class="chip">${x(reasonLabel(i.reason))}</span>${conf}
+      </div>
+      <div class="meta">${x(when || "No date")}${cre ? ` · ${x(cre)}` : ""}${i.workshop ? ` · ${x(i.workshop)}` : ""}</div>
+      ${i.evidence ? `<div class="why">${x(i.evidence)}</div>` : ""}
+      ${cited || last ? `<details><summary>Transcript turns</summary><div class="turns">
+        ${cited ? `<div class="turns-label">Cited by the verdict</div>${cited}` : ""}
+        ${last ? `<div class="turns-label">Customer's last turns</div>${last}` : ""}
+      </div></details>` : ""}
+    </div>
+    <div class="acts">
+      <button class="btn btn-sm play" data-play="${stem}" title="${playing ? "Pause" : "Play"} recording" aria-label="${playing ? "Pause" : "Play"} recording">${playing ? "❚❚" : "▶"}</button>
+      <button class="btn btn-sm" data-reaudit="${stem}" ${F.busy ? "disabled" : ""}>Re-audit</button>
+      <a class="btn btn-sm" href="/?stem=${encodeURIComponent(i.stem)}">Open</a>
+    </div>
+  </div>`;
+}
+function render() {
+  const reason = document.getElementById("fReason").value;
+  const cre = document.getElementById("fCre").value.trim().toLowerCase();
+  F.shown = F.items.filter(i =>
+    (!reason || reasonLabel(i.reason) === reason) &&
+    (!cre || `${i.cre_name || ""} ${i.cre_code || ""}`.toLowerCase().includes(cre)));
+  // Selection follows the filters: only shown calls stay selected.
+  const shownStems = new Set(F.shown.map(i => i.stem));
+  for (const stem of [...F.sel]) if (!shownStems.has(stem)) F.sel.delete(stem);
+
+  const day = document.getElementById("fDate").value;
+  document.getElementById("count").textContent = `${F.shown.length} call${F.shown.length === 1 ? "" : "s"}`;
+  document.getElementById("list").innerHTML = F.shown.length
+    ? F.shown.map(rowHtml).join("")
+    : `<div class="empty">${F.items.length ? "No fake bookings match these filters."
+        : `No fake bookings${day ? ` on ${x(dayLabel(day))}` : ""}.`}</div>`;
+  updateBulk();
+}
+function updateBulk() {
+  const n = F.sel.size;
+  document.getElementById("selCount").textContent = `${n} selected`;
+  document.getElementById("bulkBtn").disabled = F.busy || !n;
+  const all = document.getElementById("selAll");
+  all.checked = n > 0 && n === F.shown.length;
+  all.indeterminate = n > 0 && n < F.shown.length;
+  all.disabled = !F.shown.length;
+}
+function selectAll(on) {
+  F.sel = new Set(on ? F.shown.map(i => i.stem) : []);
+  document.querySelectorAll("[data-sel]").forEach(box => { box.checked = on; });
+  updateBulk();
+}
+
+document.getElementById("list").addEventListener("click", e => {
+  const play = e.target.closest("[data-play]");
+  if (play) return togglePlay(play.dataset.play);
+  const one = e.target.closest("[data-reaudit]");
+  if (one) reaudit([one.dataset.reaudit]);
+});
+document.getElementById("list").addEventListener("change", e => {
+  const box = e.target.closest("[data-sel]");
+  if (!box) return;
+  if (box.checked) F.sel.add(box.dataset.sel); else F.sel.delete(box.dataset.sel);
+  updateBulk();
+});
+
+// ── Recording: one shared player, one call at a time ─────────────────────────
+function togglePlay(stem) {
+  if (F.playing === stem && !AUD.paused) { AUD.pause(); return; }
+  if (F.playing !== stem) {
+    F.playing = stem;
+    AUD.src = `/api/audio/${encodeURIComponent(stem)}`;
+  }
+  AUD.play().catch(() => showError("Could not play this recording."));
+}
+function syncPlayButtons() {
+  document.querySelectorAll("[data-play]").forEach(btn => {
+    const on = btn.dataset.play === F.playing && !AUD.paused;
+    btn.textContent = on ? "❚❚" : "▶";
+    btn.title = `${on ? "Pause" : "Play"} recording`;
+    btn.setAttribute("aria-label", btn.title);
+  });
+}
+["play", "pause", "ended", "error"].forEach(ev => AUD.addEventListener(ev, syncPlayButtons));
+
+// ── Re-audit (already transcribed calls, through the batch runner) ───────────
+async function reaudit(stems) {
+  if (!stems.length || F.busy) return;
+  setBusy(true);
+  showError("");
+  try {
+    const r = await fetch("/api/batch", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stems, mode: "audit" }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.batch_id) throw new Error(data.error || `HTTP ${r.status}`);
+    location.href = `/batch?id=${encodeURIComponent(data.batch_id)}`;
+  } catch (error) {
+    showError(`Re-audit failed: ${error.message}`);
+    setBusy(false);
+  }
+}
+function setBusy(on) {
+  F.busy = on;
+  document.querySelectorAll("[data-reaudit]").forEach(btn => { btn.disabled = on; });
+  updateBulk();
+}
+
+// A batch already running blocks re-audits until it ends (checked every 5 s).
+async function checkBatch() {
+  let b = {};
+  try { b = await getJSON("/api/batch/latest"); } catch (error) { /* treat as idle */ }
+  const running = b.status === "running";
+  document.getElementById("batchNote").innerHTML = running
+    ? `<div class="note">A batch is running (${Number(b.done)}/${Number(b.total)} done). Re-audit is available when it ends. <a href="/batch?id=${encodeURIComponent(b.batch_id)}">Open batch →</a></div>`
+    : "";
+  setBusy(running);
+  if (running) setTimeout(checkBatch, 5000);
+}
+
+checkBatch();
+loadItems();
+</script>
+</body>
+</html>

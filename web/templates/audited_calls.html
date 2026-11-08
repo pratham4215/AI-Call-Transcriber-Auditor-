@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Kataria Audited Calls</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f6f4ef;--bg2:#efebe3;--surface:#fff;--border:#e1dcd1;
+  --t1:#1c1f24;--t2:#5b6068;--t3:#80858d;
+  --accent:#2f5d8c;--accent-bg:rgba(47,93,140,0.10);
+  --green:#1a7f37;--green-bg:rgba(40,205,65,0.13);
+  --yellow:#a05a00;--yellow-bg:rgba(244,161,0,0.13);
+  --red:#c0392b;--red-bg:rgba(255,59,48,0.11);
+  --shadow:0 1px 3px rgba(60,45,20,0.07),0 6px 20px rgba(60,45,20,0.06);
+}
+body{font:400 13.5px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 48px}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:18px}
+.back{color:var(--accent);text-decoration:none;font-size:13px;font-weight:600}
+h1{font-family:"Source Serif 4",Georgia,serif;font-size:26px;font-weight:700;letter-spacing:-0.01em}
+.pills{margin-left:auto;display:flex;gap:6px}
+.pill{padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700;background:var(--accent-bg);color:var(--accent);white-space:nowrap;font-variant-numeric:tabular-nums}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+input[type=date],input[type=search],select{height:32px;padding:0 9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--t1);font:inherit;font-size:13px;min-width:0}
+input[type=search]{flex:1 1 180px}
+.btn{height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--t1);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.btn-p{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-p:hover:not(:disabled){opacity:.88;color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-sm{height:28px;padding:0 9px;font-size:12px}
+.play{width:28px;padding:0}
+.bulk{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 2px 10px;font-size:12.5px;color:var(--t2)}
+.bulk label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.sort{margin-left:auto;display:inline-flex;align-items:center;gap:6px}
+.note{font-size:12.5px;color:var(--accent);background:var(--accent-bg);border-radius:8px;padding:8px 12px;margin-bottom:10px}
+.note a{color:inherit;font-weight:700}
+.err{font-size:12.5px;color:var(--red);background:var(--red-bg);border-radius:8px;padding:8px 12px;margin-bottom:10px;white-space:pre-wrap;word-break:break-word}
+.row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.row:first-child{padding-top:0}
+.row:last-child{border-bottom:none;padding-bottom:0}
+.row>input{margin-top:4px;flex-shrink:0;align-self:flex-start}
+.body{flex:1;min-width:0}
+.head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.reg{font-weight:700;font-size:14px}
+.meta{font-size:12px;color:var(--t2);word-break:break-word}
+.chip{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sc-hi{background:var(--green-bg);color:var(--green)}
+.sc-mid{background:var(--yellow-bg);color:var(--yellow)}
+.sc-lo{background:var(--red-bg);color:var(--red)}
+.sc-none{background:rgba(0,0,0,.06);color:var(--t3);font-weight:600}
+.grade{font-size:12px;font-weight:600;color:var(--t2)}
+.type{font-size:11px;font-weight:600;color:var(--t2);background:var(--bg2);border-radius:6px;padding:2px 8px;white-space:nowrap}
+.acts{display:flex;align-items:flex-start;gap:6px;flex-shrink:0}
+.empty{color:var(--t3);font-size:13px;padding:6px 0}
+
+@media (max-width:640px){
+  .row{flex-wrap:wrap}
+  .body{flex-basis:calc(100% - 30px)}
+  .acts{margin-left:25px}
+  .pills{margin-left:0}
+  .sort{margin-left:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="/">← Dashboard</a>
+    <h1>Audited calls</h1>
+    <div class="pills">
+      <span class="pill" id="count">Loading…</span>
+      <span class="pill" id="avg" title="Average score of the calls shown" hidden></span>
+    </div>
+  </div>
+  <div class="card filters">
+    <input type="date" id="fDate" aria-label="Call date" onchange="loadItems()">
+    <button class="btn" id="allDates" onclick="allDates()">All dates</button>
+    <select id="fType" aria-label="Call type" onchange="render()">
+      <option value="">All call types</option>
+      <option value="BOOKING">Booking</option>
+      <option value="FOLLOW_UPS">Follow-up</option>
+      <option value="SERVICE_NT_REQUIRED">Service Not Required</option>
+      <option value="ESCALATION">Escalation</option>
+    </select>
+    <input type="search" id="fCre" placeholder="CRE code or name" aria-label="CRE" oninput="render()" autocomplete="off">
+    <select id="fBand" aria-label="Score band" onchange="render()">
+      <option value="">All scores</option>
+      <option value="hi">Good · 75+</option>
+      <option value="mid">Average · 60–74</option>
+      <option value="lo">Below 60</option>
+      <option value="ng">Not genuine</option>
+    </select>
+  </div>
+  <div id="batchNote"></div>
+  <div id="error"></div>
+  <div class="bulk">
+    <label><input type="checkbox" id="selAll" onchange="selectAll(this.checked)"> Select all shown</label>
+    <span id="selCount">0 selected</span>
+    <button class="btn btn-p" id="bulkBtn" onclick="reaudit([...F.sel])" disabled>Re-audit selected</button>
+    <span class="sort">Sort
+      <button class="btn btn-sm on" id="sortNew" onclick="setSort('new')">Newest</button>
+      <button class="btn btn-sm" id="sortScore" onclick="setSort('score')" title="Click again to flip the order">Score</button>
+    </span>
+  </div>
+  <div class="card" id="list"><div class="empty">Loading audited calls…</div></div>
+</div>
+
+<script>
+const TYPES = {
+  BOOKING: "Booking", FOLLOW_UPS: "Follow-up", SERVICE_NT_REQUIRED: "Service Not Required",
+  ESCALATION: "Escalation", UNKNOWN: "Other",
+};
+// sort: "new" (newest first) or "score"; asc = lowest score first.
+const F = { items: [], shown: [], sel: new Set(), busy: false, playing: null, request: 0, sort: "new", asc: true };
+const AUD = new Audio();
+
+function x(s) {
+  if (s == null) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function typeLabel(t) {
+  return TYPES[t] || TYPES.UNKNOWN;
+}
+function isFake(i) {
+  return i.grade === "Not Genuine";
+}
+// Score band of a call, as the dashboard colours it: hi / mid / lo, ng = not genuine, "" = no score.
+function band(i) {
+  if (isFake(i)) return "ng";
+  if (i.score_pct == null) return "";
+  const pct = Number(i.score_pct);
+  return pct >= 75 ? "hi" : pct >= 60 ? "mid" : "lo";
+}
+function dayLabel(day) {
+  const d = new Date(`${day}T00:00:00`);
+  return isNaN(d) ? String(day) : d.toLocaleDateString("en-IN", {weekday:"short", day:"numeric", month:"short", year:"numeric"});
+}
+async function getJSON(path) {
+  const r = await fetch(path, { cache: "no-store" });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+  return data;
+}
+function showError(message) {
+  document.getElementById("error").innerHTML = message ? `<div class="err">${x(message)}</div>` : "";
+}
+
+// ── Load (one day, or all dates) ─────────────────────────────────────────────
+async function loadItems() {
+  const day = document.getElementById("fDate").value;
+  document.getElementById("allDates").classList.toggle("on", !day);
+  const requestId = ++F.request;
+  try {
+    const data = await getJSON(`/api/audited-calls${day ? `?date=${encodeURIComponent(day)}` : ""}`);
+    if (requestId !== F.request) return;
+    F.items = data.items || [];
+    showError("");
+  } catch (error) {
+    if (requestId !== F.request) return;
+    F.items = [];
+    showError(`Could not load audited calls: ${error.message}`);
+  }
+  render();
+}
+function allDates() {
+  document.getElementById("fDate").value = "";
+  loadItems();
+}
+
+// ── Sort ─────────────────────────────────────────────────────────────────────
+function setSort(mode) {
+  if (mode === "score" && F.sort === "score") F.asc = !F.asc;
+  else if (mode === "score") F.asc = true;
+  F.sort = mode;
+  render();
+}
+function sortItems(list) {
+  if (F.sort !== "score") return list;  // the API already returns newest first
+  // Not genuine counts as the lowest score; calls without a score go last either way.
+  const key = i => isFake(i) ? -1 : i.score_pct == null ? null : Number(i.score_pct);
+  return list.map((i, n) => [i, n]).sort(([a, na], [b, nb]) => {
+    const ka = key(a), kb = key(b);
+    if (ka == null || kb == null) return ka == null && kb == null ? na - nb : ka == null ? 1 : -1;
+    return (F.asc ? ka - kb : kb - ka) || na - nb;
+  }).map(([i]) => i);
+}
+function updateSortButtons() {
+  document.getElementById("sortNew").classList.toggle("on", F.sort === "new");
+  const score = document.getElementById("sortScore");
+  score.classList.toggle("on", F.sort === "score");
+  score.textContent = F.sort === "score" ? (F.asc ? "Score ↑ lowest" : "Score ↓ highest") : "Score";
+}
+
+// ── List ─────────────────────────────────────────────────────────────────────
+function scoreChip(i) {
+  const b = band(i);
+  if (b === "ng") return `<span class="chip sc-lo" title="Fake booking or wrong tagging">Not genuine</span>`;
+  if (!b) return `<span class="chip sc-none">No score</span>`;
+  return `<span class="chip sc-${b}">${Math.round(Number(i.score_pct))}%</span>`;
+}
+function rowHtml(i) {
+  const stem = x(i.stem);
+  const when = [i.call_date ? dayLabel(i.call_date) : "", i.call_time || ""].filter(Boolean).join(" · ");
+  const cre = [i.cre_name, i.cre_code ? `(${i.cre_code})` : ""].filter(Boolean).join(" ");
+  const playing = F.playing === i.stem && !AUD.paused;
+  return `<div class="row">
+    <input type="checkbox" data-sel="${stem}" ${F.sel.has(i.stem) ? "checked" : ""} aria-label="Select ${x(i.registration || i.stem)}">
+    <div class="body">
+      <div class="head">
+        <span class="reg">${x(i.registration || i.stem)}</span>
+        ${scoreChip(i)}
+        ${i.grade && !isFake(i) ? `<span class="grade">${x(i.grade)}</span>` : ""}
+        <span class="type">${x(typeLabel(i.call_type))}</span>
+        ${i.review ? `<span class="chip ${i.review.status === "reviewed" ? "sc-hi" : "sc-mid"}" title="Human review by ${x(i.review.reviewer)}">${
+          i.review.status === "reviewed" ? "Reviewed" : "In review"} · ${x(i.review.reviewer)}</span>` : ""}
+      </div>
+      <div class="meta">${x(when || "No date")}${cre ? ` · ${x(cre)}` : ""}${i.workshop ? ` · ${x(i.workshop)}` : ""}</div>
+    </div>
+    <div class="acts">
+      <button class="btn btn-sm play" data-play="${stem}" title="${playing ? "Pause" : "Play"} recording" aria-label="${playing ? "Pause" : "Play"} recording">${playing ? "❚❚" : "▶"}</button>
+      <button class="btn btn-sm" data-reaudit="${stem}" ${F.busy ? "disabled" : ""}>Re-audit</button>
+      <a class="btn btn-sm" href="/?stem=${encodeURIComponent(i.stem)}">Open</a>
+    </div>
+  </div>`;
+}
+function render() {
+  const type = document.getElementById("fType").value;
+  const cre = document.getElementById("fCre").value.trim().toLowerCase();
+  const scoreBand = document.getElementById("fBand").value;
+  F.shown = sortItems(F.items.filter(i =>
+    (!type || (TYPES[i.call_type] ? i.call_type : "UNKNOWN") === type) &&
+    (!cre || `${i.cre_name || ""} ${i.cre_code || ""}`.toLowerCase().includes(cre)) &&
+    (!scoreBand || band(i) === scoreBand)));
+  // Selection follows the filters: only shown calls stay selected.
+  const shownStems = new Set(F.shown.map(i => i.stem));
+  for (const stem of [...F.sel]) if (!shownStems.has(stem)) F.sel.delete(stem);
+
+  const day = document.getElementById("fDate").value;
+  document.getElementById("count").textContent = `${F.shown.length} call${F.shown.length === 1 ? "" : "s"}`;
+  const scored = F.shown.filter(i => i.score_pct != null).map(i => Number(i.score_pct));
+  const avg = document.getElementById("avg");
+  avg.hidden = !scored.length;
+  avg.textContent = scored.length ? `Avg ${Math.round(scored.reduce((a, b) => a + b, 0) / scored.length)}%` : "";
+  updateSortButtons();
+  document.getElementById("list").innerHTML = F.shown.length
+    ? F.shown.map(rowHtml).join("")
+    : `<div class="empty">${F.items.length ? "No audited calls match these filters."
+        : `No audited calls${day ? ` on ${x(dayLabel(day))}` : ""}.`}</div>`;
+  updateBulk();
+}
+function updateBulk() {
+  const n = F.sel.size;
+  document.getElementById("selCount").textContent = `${n} selected`;
+  document.getElementById("bulkBtn").disabled = F.busy || !n;
+  const all = document.getElementById("selAll");
+  all.checked = n > 0 && n === F.shown.length;
+  all.indeterminate = n > 0 && n < F.shown.length;
+  all.disabled = !F.shown.length;
+}
+function selectAll(on) {
+  F.sel = new Set(on ? F.shown.map(i => i.stem) : []);
+  document.querySelectorAll("[data-sel]").forEach(box => { box.checked = on; });
+  updateBulk();
+}
+
+document.getElementById("list").addEventListener("click", e => {
+  const play = e.target.closest("[data-play]");
+  if (play) return togglePlay(play.dataset.play);
+  const one = e.target.closest("[data-reaudit]");
+  if (one) reaudit([one.dataset.reaudit]);
+});
+document.getElementById("list").addEventListener("change", e => {
+  const box = e.target.closest("[data-sel]");
+  if (!box) return;
+  if (box.checked) F.sel.add(box.dataset.sel); else F.sel.delete(box.dataset.sel);
+  updateBulk();
+});
+
+// ── Recording: one shared player, one call at a time ─────────────────────────
+function togglePlay(stem) {
+  if (F.playing === stem && !AUD.paused) { AUD.pause(); return; }
+  if (F.playing !== stem) {
+    F.playing = stem;
+    AUD.src = `/api/audio/${encodeURIComponent(stem)}`;
+  }
+  AUD.play().catch(() => showError("Could not play this recording."));
+}
+function syncPlayButtons() {
+  document.querySelectorAll("[data-play]").forEach(btn => {
+    const on = btn.dataset.play === F.playing && !AUD.paused;
+    btn.textContent = on ? "❚❚" : "▶";
+    btn.title = `${on ? "Pause" : "Play"} recording`;
+    btn.setAttribute("aria-label", btn.title);
+  });
+}
+["play", "pause", "ended", "error"].forEach(ev => AUD.addEventListener(ev, syncPlayButtons));
+
+// ── Re-audit (already transcribed calls, through the batch runner) ───────────
+async function reaudit(stems) {
+  if (!stems.length || F.busy) return;
+  setBusy(true);
+  showError("");
+  try {
+    const r = await fetch("/api/batch", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stems, mode: "audit" }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.batch_id) throw new Error(data.error || `HTTP ${r.status}`);
+    location.href = `/batch?id=${encodeURIComponent(data.batch_id)}`;
+  } catch (error) {
+    showError(`Re-audit failed: ${error.message}`);
+    setBusy(false);
+  }
+}
+function setBusy(on) {
+  F.busy = on;
+  document.querySelectorAll("[data-reaudit]").forEach(btn => { btn.disabled = on; });
+  updateBulk();
+}
+
+// A batch already running blocks re-audits until it ends (checked every 5 s).
+async function checkBatch() {
+  let b = {};
+  try { b = await getJSON("/api/batch/latest"); } catch (error) { /* treat as idle */ }
+  const running = b.status === "running";
+  document.getElementById("batchNote").innerHTML = running
+    ? `<div class="note">A batch is running (${Number(b.done)}/${Number(b.total)} done). Re-audit is available when it ends. <a href="/batch?id=${encodeURIComponent(b.batch_id)}">Open batch →</a></div>`
+    : "";
+  setBusy(running);
+  if (running) setTimeout(checkBatch, 5000);
+}
+
+// Filters stay while moving between pages in this tab; refreshing the page clears them.
+(function keepFilters(key, ids) {
+  try {
+    if (performance.getEntriesByType("navigation")[0]?.type === "reload") sessionStorage.removeItem(key);
+    const state = JSON.parse(sessionStorage.getItem(key) || "{}");
+    ids.forEach(id => { if (typeof state[id] === "string") document.getElementById(id).value = state[id]; });
+  } catch {}
+  const save = () => { try { sessionStorage.setItem(key, JSON.stringify(Object.fromEntries(ids.map(id => [id, document.getElementById(id).value])))); } catch {} };
+  ids.forEach(id => ["input", "change"].forEach(ev => document.getElementById(id).addEventListener(ev, save)));
+  document.getElementById("allDates").addEventListener("click", () => setTimeout(save));
+})("auditedFilters", ["fDate", "fType", "fCre", "fBand"]);
+checkBatch();
+loadItems();
+</script>
+</body>
+</html>

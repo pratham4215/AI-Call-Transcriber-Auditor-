@@ -1,0 +1,27 @@
+# Local secrets: DB password, HF token
+.env
+__pycache__/
+*.pyc
+# Recording fetched by "python -m core.recordings ... --save"
+/test_recording.*
+
+# Recordings and CRM data brought in by core.audit.importer are customer data:
+# keep them out of git. Files already committed in data/audios stay tracked.
+/data/audios/
+
+# Human reviews written by the reviewer dashboard (reviewer_wsgi.py)
+/reviews/
+/exports/
+
+# Call transcripts and audit results are customer data (named by vehicle number)
+/transcripts/
+/reports/
+
+# Model weights (ASR / diarizer .nemo files) are large; keep them local
+/models/*.nemo
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

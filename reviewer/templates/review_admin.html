@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Kataria Review Admin</title>
+{% include "_head.html" %}
+<style>
+.section-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin:22px 2px 10px}
+.section-h h2{font-family:"Source Serif 4",Georgia,serif;font-size:19px;font-weight:700}
+.section-h .meta{font-size:12px;color:var(--t3)}
+.section-h .tools{margin-left:auto;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);padding:0 10px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:middle}
+.dot.idle{background:var(--yellow)}
+.small{font-size:12px;color:var(--t2)}
+.act{display:inline-block;padding:1px 7px;border-radius:5px;font-size:11px;font-weight:700;background:var(--bg2);color:var(--t2);white-space:nowrap}
+.act-save_review{background:var(--green-bg);color:var(--green)}
+.act-delete_review,.act-remove_call,.act-admin_login_failed{background:var(--red-bg);color:var(--red)}
+.act-admin_login,.act-restore_call{background:var(--accent-bg);color:var(--accent)}
+.gate{max-width:440px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  {% set page = "admin" %}{% include "_bar.html" %}
+  {% if not is_admin %}
+  <div class="card gate">
+    <h1 style="font-size:20px;margin-bottom:6px">Admin only</h1>
+    <p class="muted" style="margin-bottom:12px">Sign in with the admin PIN to see who is online and what reviewers are doing.</p>
+    <button class="btn btn-p" onclick="adminSignIn()">Admin sign-in</button>
+  </div>
+  {% else %}
+  <h1>Admin</h1>
+  <div id="error"></div>
+
+  <div class="section-h"><h2>Online now</h2><span class="meta" id="onlineMeta"></span></div>
+  <div class="card scroll" id="online"><div class="empty"><span class="spin"></span> Loading…</div></div>
+
+  <div class="section-h"><h2>Reviewers</h2>
+    <div class="tools">
+      <label class="small">From <input type="date" id="sFrom" onchange="loadSummary()"></label>
+      <label class="small">to <input type="date" id="sTo" onchange="loadSummary()"></label>
+    </div>
+  </div>
+  <div class="card scroll" id="summary"><div class="empty">Loading…</div></div>
+
+  <div class="section-h"><h2>Activity</h2><span class="meta">kept for the last 30 days</span>
+    <div class="tools">
+      <select id="aWho" onchange="loadActivity()"><option value="">Everyone</option></select>
+      <select id="aAction" onchange="loadActivity()">
+        <option value="">All actions</option>
+        <option value="open_call">Opened a call</option>
+        <option value="save_review">Saved a review</option>
+        <option value="delete_review">Deleted a review</option>
+        <option value="export">Exported Excel</option>
+        <option value="remove_call">Removed a call</option>
+        <option value="restore_call">Restored a call</option>
+        <option value="admin_login">Admin sign-in</option>
+        <option value="admin_login_failed">Wrong admin PIN</option>
+      </select>
+      <label class="small">From <input type="date" id="aFrom" onchange="loadActivity()"></label>
+      <label class="small">to <input type="date" id="aTo" onchange="loadActivity()"></label>
+    </div>
+  </div>
+  <div class="card scroll" id="activity"><div class="empty">Loading…</div></div>
+
+  <div class="section-h"><h2>Removed calls</h2><span class="meta">hidden from both dashboards; nothing is deleted from disk</span></div>
+  <div class="card scroll" id="removed"><div class="empty">Loading…</div></div>
+  {% endif %}
+</div>
+{% include "_common.html" %}
+<script>
+renderWho();
+askName(false);
+</script>
+{% if is_admin %}
+<script>
+const ACTIONS = { open_call: "Opened call", save_review: "Saved review", delete_review: "Deleted review", export: "Exported Excel",
+  remove_call: "Removed call", restore_call: "Restored call", admin_login: "Admin sign-in", admin_logout: "Admin sign-out",
+  admin_login_failed: "Wrong admin PIN" };
+const PAGES = { list: "Call list", call: "Reviewing a call", stats: "Agreement", admin: "Admin" };
+const today = isoToday();
+function isoToday() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
+function clock(ts) { return ts ? new Date(ts * 1000).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—"; }
+function ago(ts) {
+  const s = Math.max(0, Math.round(Date.now() / 1000 - ts));
+  return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : `${Math.floor(s / 3600)} h ${Math.floor((s % 3600) / 60)} min`;
+}
+function hm(min) { return `${Math.floor(min / 60)}:${String(min % 60).padStart(2, "0")}`; }
+function browser(agent) {
+  const a = String(agent || "");
+  const name = /Edg\//.test(a) ? "Edge" : /Chrome\//.test(a) ? "Chrome" : /Firefox\//.test(a) ? "Firefox" : /Safari\//.test(a) ? "Safari" : "Browser";
+  const os = /Android/.test(a) ? "Android" : /iPhone|iPad/.test(a) ? "iOS" : /Windows/.test(a) ? "Windows" : /Mac OS/.test(a) ? "Mac" : /Linux/.test(a) ? "Linux" : "";
+  return os ? `${name} · ${os}` : name;
+}
+function callLink(stem) { return stem ? `<a href="/call/${enc(stem)}">${x(String(stem).split("_")[0])}</a>` : ""; }
+function err(message) { document.getElementById("error").innerHTML = message ? `<div class="err">${x(message)}</div>` : ""; }
+
+async function loadOnline() {
+  try {
+    const items = (await getJSON("/api/admin/online")).items || [];
+    const people = new Set(items.map(i => i.reviewer)).size;
+    document.getElementById("onlineMeta").textContent = `${people} ${people === 1 ? "person" : "people"} · ${items.length} open page${items.length === 1 ? "" : "s"} · updates every 10 s`;
+    document.getElementById("online").innerHTML = items.length ? `<table>
+      <thead><tr><th>Reviewer</th><th>Where</th><th>On this page for</th><th>Last signal</th><th>Computer</th></tr></thead>
+      <tbody>${items.map(i => `<tr>
+        <td><span class="dot ${Date.now() / 1000 - i.last_seen > 30 ? "idle" : ""}"></span><b>${x(i.reviewer)}</b></td>
+        <td>${x(PAGES[i.page] || i.page)} ${i.page === "call" ? callLink(i.stem) : ""}</td>
+        <td class="num">${ago(i.since)}</td>
+        <td class="num">${ago(i.last_seen)} ago</td>
+        <td class="small">${x(i.ip)} · ${x(browser(i.agent))}</td></tr>`).join("")}</tbody></table>`
+      : `<div class="empty">Nobody has the reviewer dashboard open right now.</div>`;
+  } catch (e) { err(`Could not load who is online: ${e.message}`); }
+}
+
+async function loadSummary() {
+  const p = new URLSearchParams({ from: sFrom.value, to: sTo.value });
+  try {
+    const items = (await getJSON(`/api/admin/summary?${p}`)).items || [];
+    const who = document.getElementById("aWho"), kept = who.value;
+    who.innerHTML = `<option value="">Everyone</option>` + items.map(i => `<option value="${x(i.reviewer)}">${x(i.reviewer)}</option>`).join("");
+    if (kept && ![...who.options].some(o => o.value === kept)) who.add(new Option(kept, kept));
+    who.value = kept;
+    document.getElementById("summary").innerHTML = items.length ? `<table>
+      <thead><tr><th>Reviewer</th><th class="num">Calls opened</th><th class="num">Reviews saved</th><th class="num">Calls reviewed</th>
+        <th class="num">Deleted</th><th class="num">Active time</th><th>First seen</th><th>Last seen</th></tr></thead>
+      <tbody>${items.map(i => `<tr><td><b>${x(i.reviewer)}</b></td><td class="num">${Number(i.opened || 0)}</td>
+        <td class="num">${Number(i.saves || 0)}</td><td class="num">${Number(i.calls_reviewed || 0)}</td><td class="num">${Number(i.deletes || 0)}</td>
+        <td class="num" title="Minutes with the dashboard open and in view">${hm(Number(i.active_minutes || 0))}</td>
+        <td class="small">${clock(i.first_at)}</td><td class="small">${clock(i.last_at)}</td></tr>`).join("")}</tbody></table>`
+      : `<div class="empty">No reviewer activity in this range.</div>`;
+  } catch (e) { err(`Could not load the reviewer summary: ${e.message}`); }
+}
+
+async function loadActivity() {
+  const p = new URLSearchParams({ reviewer: aWho.value, action: aAction.value, from: aFrom.value, to: aTo.value, limit: 500 });
+  try {
+    const items = (await getJSON(`/api/admin/activity?${p}`)).items || [];
+    document.getElementById("activity").innerHTML = items.length ? `<table>
+      <thead><tr><th>When</th><th>Reviewer</th><th>Action</th><th>Call</th><th>Details</th><th>Computer</th></tr></thead>
+      <tbody>${items.map(i => `<tr><td class="small" style="white-space:nowrap">${clock(i.at)}</td><td><b>${x(i.reviewer)}</b></td>
+        <td><span class="act act-${x(i.action)}">${x(ACTIONS[i.action] || i.action)}</span></td>
+        <td>${callLink(i.stem)}</td><td class="small">${x(i.detail || "")}</td><td class="small">${x(i.ip || "")}</td></tr>`).join("")}</tbody></table>
+      ${items.length >= 500 ? `<div class="small" style="margin-top:8px">Showing the latest 500; narrow the dates or person to see more.</div>` : ""}`
+      : `<div class="empty">No activity matches these filters.</div>`;
+  } catch (e) { err(`Could not load the activity: ${e.message}`); }
+}
+
+async function loadRemoved() {
+  try {
+    const items = (await getJSON("/api/admin/removed")).items || [];
+    document.getElementById("removed").innerHTML = items.length ? `<table>
+      <thead><tr><th>Call</th><th>Call date</th><th>Type</th><th class="num">AI score</th><th>Removed</th><th>Reason</th><th></th></tr></thead>
+      <tbody>${items.map(i => `<tr><td><b>${x(i.registration || i.stem)}</b></td><td class="small">${x(i.call_date || "—")}</td>
+        <td class="small">${x(TYPE_LABEL[i.call_type] || i.call_type || "—")}</td><td class="num">${scoreChip(i.score_pct, null)}</td>
+        <td class="small">${x(i.removed_by)} · ${clock(i.removed_at)}</td><td class="small">${x(i.reason || "")}</td>
+        <td class="num"><button class="btn btn-sm" onclick="restoreCall(${x(JSON.stringify(i.stem))})">Restore</button></td></tr>`).join("")}</tbody></table>`
+      : `<div class="empty">No calls have been removed.</div>`;
+  } catch (e) { err(`Could not load removed calls: ${e.message}`); }
+}
+
+async function restoreCall(stem) {
+  try {
+    await getJSON(`/api/admin/call/${enc(stem)}/restore`, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reviewer: reviewerName() }) });
+    loadRemoved();
+    loadActivity();
+  } catch (e) { err(`Could not restore: ${e.message}`); }
+}
+
+// Date filters stay while moving between pages in this tab; refreshing resets them to today.
+(function keepDates() {
+  const ids = ["sFrom", "sTo", "aFrom", "aTo", "aAction"];
+  let state = {};
+  try {
+    if (pageReloaded()) sessionStorage.removeItem("adminFilters");
+    state = JSON.parse(sessionStorage.getItem("adminFilters") || "{}");
+  } catch {}
+  sFrom.value = state.sFrom ?? today; sTo.value = state.sTo ?? today;
+  aFrom.value = state.aFrom ?? ""; aTo.value = state.aTo ?? ""; aAction.value = state.aAction ?? "";
+  const save = () => { try { sessionStorage.setItem("adminFilters", JSON.stringify(Object.fromEntries(ids.map(id => [id, document.getElementById(id).value])))); } catch {} };
+  ids.forEach(id => document.getElementById(id).addEventListener("change", save));
+})();
+
+loadOnline();
+loadSummary().then(loadActivity);
+loadRemoved();
+setInterval(() => { if (document.visibilityState === "visible") { loadOnline(); } }, 10000);
+setInterval(() => { if (document.visibilityState === "visible") { loadSummary(); } }, 60000);
+</script>
+{% endif %}
+</body>
+</html>

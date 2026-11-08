@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Kataria Call Review</title>
+{% include "_head.html" %}
+<style>
+.back{color:var(--accent);text-decoration:none;font-weight:600;font-size:13px}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+.side{position:sticky;top:12px;display:flex;flex-direction:column;max-height:calc(100vh - 24px)}
+.title{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.title h1{font-size:22px}
+.sub{font-size:12.5px;color:var(--t2);margin-top:4px}
+.sl{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin:18px 2px 8px}
+.verdict{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0}
+.verdict button{height:28px;padding:0 10px;border:none;background:var(--surface);font:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--t2)}
+.verdict button+button{border-left:1px solid var(--border)}
+.verdict button.agree.on{background:var(--green-bg);color:var(--green)}
+.verdict button.disagree.on{background:var(--red-bg);color:var(--red)}
+.sec{border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;background:var(--surface)}
+.sec-h{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);font-weight:700;font-size:13px}
+.sec-h .n{margin-left:auto;font-weight:600;font-size:12px;color:var(--t2)}
+.prm{padding:11px 14px;border-top:1px solid var(--border)}
+.prm-top{display:flex;align-items:flex-start;gap:10px}
+.prm-name{font-weight:600;flex:1;min-width:0}
+.ai{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:4px;font-size:11.5px;color:var(--t2)}
+.ev-text{font-size:12px;color:var(--t2);margin-top:4px;line-height:1.45}
+.turn-chip{border:1px solid var(--border);background:var(--surface);border-radius:6px;font:inherit;font-size:11px;font-weight:600;color:var(--accent);padding:0 6px;height:20px;cursor:pointer}
+.fix{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.fix label{font-size:12px;color:var(--t2);display:flex;align-items:center;gap:6px}
+.fix textarea{flex:1 1 100%;min-height:44px}
+.addnote{font-size:12px}
+.prm.dis{background:rgba(255,59,48,0.035)}
+.box{padding:14px}
+.box-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.box-h b{flex:1}
+.acts{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 30%);padding:18px 0 6px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.acts .msg{font-size:12.5px;color:var(--t2)}
+.hist{font-size:12.5px}
+.hist-row{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.hist-row:last-child{border-bottom:none}
+.tabs{display:flex;gap:4px;margin-bottom:10px}
+audio{width:100%;margin-bottom:10px}
+.pane{overflow:auto;flex:1;min-height:0}
+.turn{display:flex;gap:10px;padding:8px 8px;border-radius:8px;cursor:pointer;transition:background 150ms ease}
+.turn:hover{background:var(--bg)}
+.turn.now{background:var(--accent-bg)}
+.turn.hit{animation:hit 1.8s ease}
+@keyframes hit{from{background:var(--yellow-bg)}to{background:transparent}}
+.turn-meta{width:62px;flex-shrink:0;font-size:11px;color:var(--t3)}
+.turn-role{display:inline-block;font-weight:700;font-size:11px;padding:1px 6px;border-radius:5px;margin-bottom:2px}
+.r-agent{background:var(--accent-bg);color:var(--accent)}
+.r-customer{background:var(--bg2);color:var(--t2)}
+.turn-text{flex:1;min-width:0;line-height:1.5}
+.turn-flag{flex-shrink:0;align-self:flex-start;border:none;background:none;cursor:pointer;color:var(--t3);font-size:12px;opacity:0;padding:2px 4px}
+.turn:hover .turn-flag,.turn-flag.on{opacity:1}
+.turn-flag.on{color:var(--red)}
+.kv{display:grid;grid-template-columns:minmax(110px,40%) 1fr;gap:4px 12px;font-size:12.5px;margin-bottom:6px}
+.kv dt{color:var(--t3)}
+.kv dd{word-break:break-word}
+.kv-h{font-size:12px;font-weight:700;margin:14px 0 6px;color:var(--t1)}
+table.hist-t{width:100%;border-collapse:collapse;font-size:12px}
+table.hist-t th{text-align:left;color:var(--t3);font-weight:600;padding:4px 6px;border-bottom:1px solid var(--border)}
+table.hist-t td{padding:4px 6px;border-bottom:1px solid var(--border)}
+.levels{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.lv{position:relative;height:30px;padding:0 11px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--t2);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;font-variant-numeric:tabular-nums}
+.lv:hover{border-color:var(--accent);color:var(--accent)}
+.lv:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.lv.on.l-full{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.lv.on.l-mid{background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow)}
+.lv.on.l-zero{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.ai-tag{position:absolute;top:-8px;right:-6px;padding:0 5px;border-radius:5px;background:var(--accent);color:#fff;font-size:9.5px;font-weight:700;line-height:15px;letter-spacing:.03em}
+.rev-score{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:8px;font-size:12.5px}
+.link.del{color:var(--red)}
+.del-all{color:var(--red)}
+.del-all:hover:not(:disabled){border-color:var(--red)!important;color:var(--red)!important}
+.del-btn{background:var(--red);border-color:var(--red);color:#fff}
+.del-btn:hover:not(:disabled){opacity:.88;color:#fff!important}
+.pin-err{font-size:12.5px;color:var(--red);margin:-6px 0 10px}
+.flag-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px}
+.flag-row .turn-chip{margin-top:6px}
+.flag-row textarea{min-height:36px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}.side{position:static;max-height:none}.pane{max-height:70vh}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  {% set page = "call" %}{% include "_bar.html" %}
+  <a class="back" href="/">← All calls</a>
+  <div id="error" style="margin-top:10px"></div>
+  <div id="page"><div class="card empty" style="margin-top:12px"><span class="spin"></span> Loading call…</div></div>
+</div>
+{% include "_common.html" %}
+<script>
+const STEM = {{ stem | tojson }};
+// form: what this reviewer is writing. Prefilled from the call's latest review.
+const C = { data: null, form: null, dirty: false, saving: false, tab: "tx", audio: null, msg: "" };
+
+function emptyForm() {
+  return { params: {}, booking: { verdict: null, genuine: null, note: "" },
+           call_type: { verdict: null, correct: null, note: "" }, overall: "", coaching: "", asr_flags: [] };
+}
+function formFrom(review) {
+  const f = emptyForm();
+  if (!review) return f;
+  for (const [pid, p] of Object.entries(review.params || {})) f.params[pid] = { ...p };
+  Object.assign(f.booking, review.booking || {});
+  Object.assign(f.call_type, review.call_type || {});
+  f.overall = review.overall || "";
+  f.coaching = review.coaching || "";
+  f.asr_flags = (review.asr_flags || []).map(a => ({ ...a }));
+  return f;
+}
+function touch() { C.dirty = true; C.msg = ""; renderActs(); updateScore(); }
+
+// ── Load ──
+async function load() {
+  try {
+    C.data = await getJSON(`/api/call/${enc(STEM)}?who=${enc(reviewerName())}`);
+  } catch (error) {
+    document.getElementById("page").innerHTML = "";
+    document.getElementById("error").innerHTML = `<div class="err">Could not load this call: ${x(error.message)}</div>`;
+    return;
+  }
+  C.form = formFrom(C.data.reviews[0]);
+  render();
+}
+
+// ── AI result helpers ──
+function ai() { return C.data.report.audit_result?.audit || {}; }
+function points(pid, rating) {
+  const opts = C.data.score_options[pid] || {};
+  const key = Object.keys(opts).find(k => k.toLowerCase() === String(rating || "").toLowerCase());
+  return key != null ? opts[key] : null;
+}
+function ratingChip(pid, rating) {
+  const max = Math.max(...Object.values(C.data.score_options[pid] || {0: 0}));
+  const pts = points(pid, rating);
+  const cls = pts == null ? "c-none" : pts >= max ? "c-hi" : pts > 0 ? "c-mid" : "c-lo";
+  return `<span class="chip ${cls}">${x(rating || "—")}${pts != null ? ` · ${+pts}/${+max}` : ""}</span>`;
+}
+function turnChips(turns) {
+  return (turns || []).filter(t => /^T\d{1,4}$/.test(t))
+    .map(t => `<button type="button" class="turn-chip" onclick="goTurn('${t}')">${t}</button>`).join("");
+}
+const GENERIC = /^(Rated .* by the (fine-tuned|stock) model|AUTO-SCORE)/;
+
+// ── Page ──
+function render() {
+  const d = C.data, sum = d.report.management_summary || {};
+  const meta = d.crm.call_meta || {}, cre = d.crm.cre || {};
+  const callDate = String(meta.call_date || "");
+  document.title = `${d.crm.vehicle?.registration_number || STEM} · Call review`;
+  document.getElementById("page").innerHTML = `
+    <div class="grid" style="margin-top:12px">
+      <div>
+        <div class="card">
+          <div class="title">
+            <h1>${x(d.crm.vehicle?.registration_number || STEM.split("_")[0])}</h1>
+            ${scoreChip(sum.score_pct, sum.grade)}
+            <span class="chip c-b">${x(TYPE_LABEL[d.report.weight_table] || sum.call_type || "")}</span>
+            ${sum.grade && sum.grade !== "Not Genuine" ? `<span class="muted">${x(sum.grade)} · ${x(sum.score_display || "")}</span>` : ""}
+          </div>
+          <div class="rev-score" id="revScore"></div>
+          <div class="sub">${x([callDate ? `${dayLabel(callDate.slice(0, 10))} ${callDate.slice(11, 16)}` : "",
+            d.call_seconds != null ? (d.call_seconds >= 60 ? `${Math.floor(d.call_seconds / 60)}:${String(d.call_seconds % 60).padStart(2, "0")} long` : `${d.call_seconds} s long`) : "",
+            [cre.name, cre.username ? `(${cre.username})` : ""].filter(Boolean).join(" "),
+            d.crm.service_profile?.workshop].filter(Boolean).join(" · "))}</div>
+          ${IS_ADMIN ? `<div style="margin-top:10px"><button class="btn btn-sm del-all" onclick="removeCall()" title="Admin: hide this call from both dashboards">Remove call</button></div>` : ""}
+        </div>
+        <div id="callChecks"></div>
+        <div class="sl">Parameters</div>
+        <div style="display:flex;gap:8px;margin:-2px 2px 10px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="agreeRest()">Agree with all I haven't marked</button>
+        </div>
+        <div id="params"></div>
+        <div class="sl">Your comments</div>
+        <div class="card">
+          <label class="muted" style="font-size:12px">Overall comment: what happened on this call and what should have happened</label>
+          <textarea id="overall" rows="3" maxlength="2000" oninput="C.form.overall=this.value;touch()">${x(C.form.overall)}</textarea>
+          <label class="muted" style="font-size:12px;display:block;margin-top:10px">Coaching for the CRE</label>
+          <textarea id="coaching" rows="2" maxlength="2000" oninput="C.form.coaching=this.value;touch()">${x(C.form.coaching)}</textarea>
+          <div id="flags"></div>
+        </div>
+        <div class="acts" id="acts"></div>
+        <div class="sl">Review history</div>
+        <div class="card hist" id="history"></div>
+      </div>
+      <div class="side">
+        <div class="card" style="display:flex;flex-direction:column;min-height:0;flex:1;margin-bottom:0">
+          ${d.has_audio ? `<audio id="player" controls preload="metadata" src="/audio/${enc(STEM)}"></audio>`
+            : `<div class="empty" style="margin-bottom:8px">No recording on this machine.</div>`}
+          <div class="tabs">
+            <button class="btn btn-sm ${C.tab === "tx" ? "on" : ""}" onclick="setTab('tx')">Transcript</button>
+            <button class="btn btn-sm ${C.tab === "crm" ? "on" : ""}" onclick="setTab('crm')">Call details</button>
+          </div>
+          <div class="pane" id="pane"></div>
+        </div>
+      </div>
+    </div>`;
+  renderChecks();
+  renderParams();
+  renderFlags();
+  renderActs();
+  renderHistory();
+  renderPane();
+  wireAudio();
+  updateScore();
+}
+
+// Booking genuine and call type: the two whole-call verdicts.
+function renderChecks() {
+  const d = C.data, b = d.evidence.booking, f = C.form;
+  const table = d.report.weight_table;
+  const parts = [];
+  if (b || table === "BOOKING") {
+    const aiGenuine = b ? b.genuine !== false : d.report.management_summary?.grade !== "Not Genuine";
+    parts.push(`<div class="card box">
+      <div class="box-h"><b>Booking genuine?</b>
+        <span class="chip ${aiGenuine ? "c-hi" : "c-lo"}">AI: ${aiGenuine ? "Genuine" : "Not genuine"}</span>
+        ${verdictButtons("booking", f.booking.verdict)}</div>
+      ${b?.reason && !aiGenuine ? `<div class="ev-text">Reason: ${x(String(b.reason).replace(/_/g, " "))}</div>` : ""}
+      ${b?.evidence ? `<div class="ev-text">${x(b.evidence)}</div>` : ""}
+      ${b?.confidence != null ? `<div class="ai">AI confidence ${Math.round(b.confidence * 100)}% ${turnChips(b.turns)}</div>` : (b?.turns?.length ? `<div class="ai">${turnChips(b.turns)}</div>` : "")}
+      ${f.booking.verdict === "disagree" ? `<div class="fix"><span class="muted" style="font-size:12px">You say: ${aiGenuine ? "not genuine" : "genuine"}</span>
+        <textarea maxlength="2000" placeholder="Why? What did the customer actually agree to?" oninput="C.form.booking.note=this.value;touch()">${x(f.booking.note)}</textarea></div>` : ""}
+    </div>`);
+  }
+  parts.push(`<div class="card box">
+    <div class="box-h"><b>Call type right?</b>
+      <span class="chip c-b">AI: ${x(TYPE_LABEL[table] || table)}</span>
+      ${verdictButtons("call_type", f.call_type.verdict)}</div>
+    ${f.call_type.verdict === "disagree" ? `<div class="fix">
+      <label>Correct type <select onchange="C.form.call_type.correct=this.value||null;touch()">
+        <option value="">Pick…</option>${Object.keys(TYPE_LABEL).filter(t => t !== table).map(t =>
+          `<option value="${t}" ${f.call_type.correct === t ? "selected" : ""}>${TYPE_LABEL[t]}</option>`).join("")}</select></label>
+      <textarea maxlength="2000" placeholder="Why? (optional)" oninput="C.form.call_type.note=this.value;touch()">${x(f.call_type.note)}</textarea></div>` : ""}
+  </div>`);
+  document.getElementById("callChecks").innerHTML = parts.join("");
+}
+
+function verdictButtons(key, current) {
+  return `<span class="verdict">
+    <button type="button" class="agree ${current === "agree" ? "on" : ""}" onclick="setVerdict('${key}','agree')">Agree</button>
+    <button type="button" class="disagree ${current === "disagree" ? "on" : ""}" onclick="setVerdict('${key}','disagree')">Disagree</button></span>`;
+}
+
+function setVerdict(key, verdict) {
+  const f = C.form;
+  if (key === "booking" || key === "call_type") {
+    f[key].verdict = f[key].verdict === verdict ? null : verdict;
+    if (key === "booking") {
+      const b = C.data.evidence.booking;
+      const aiGenuine = b ? b.genuine !== false : C.data.report.management_summary?.grade !== "Not Genuine";
+      f.booking.genuine = f.booking.verdict === "disagree" ? !aiGenuine : f.booking.verdict === "agree" ? aiGenuine : null;
+    }
+    if (f[key].verdict !== "disagree" && key === "call_type") f.call_type.correct = null;
+    renderChecks();
+  } else {
+    const p = f.params[key] ||= { verdict: null, rating: null, note: "" };
+    p.verdict = p.verdict === verdict ? null : verdict;
+    if (p.verdict !== "disagree") p.rating = null;
+    renderParam(key);
+  }
+  touch();
+}
+
+// ── Parameters ──
+function renderParams() {
+  const audit = ai();
+  const known = new Set(SECTIONS.flatMap(([, pids]) => pids));
+  const extra = Object.keys(audit).filter(p => !known.has(p));
+  const sections = [...SECTIONS, ...(extra.length ? [["Other", extra]] : [])];
+  document.getElementById("params").innerHTML = sections.map(([name, pids]) => {
+    const active = pids.filter(p => audit[p]);
+    if (!active.length) return "";
+    return `<div class="sec"><div class="sec-h">${x(name)}<span class="n" id="secn-${x(name.replace(/\W+/g, "_"))}"></span></div>
+      ${active.map(pid => `<div class="prm" id="prm-${pid}"></div>`).join("")}</div>`;
+  }).join("");
+  Object.keys(audit).forEach(renderParam);
+}
+
+function renderParam(pid) {
+  const el = document.getElementById(`prm-${pid}`);
+  if (!el) return;
+  const a = ai()[pid] || {}, ev = C.data.evidence.params?.[pid] || {};
+  const p = C.form.params[pid] || { verdict: null, rating: null, note: "" };
+  const opts = Object.keys(C.data.score_options[pid] || {});
+  const showNote = p.verdict === "disagree" || p.note || p.noteOpen;
+  el.className = `prm ${p.verdict === "disagree" ? "dis" : ""}`;
+  el.innerHTML = `
+    <div class="prm-top">
+      <div class="prm-name">${x(PL[pid] || pid)}
+        <div class="ai">AI ${ratingChip(pid, a.rating)}
+          ${ev.source ? `<span class="muted">${x(ev.source)}</span>` : ""}
+          ${ev.check ? `<span class="chip c-mid" title="The AI was unsure">${ev.confidence != null ? `${Math.round(ev.confidence * 100)}% sure` : "Check"}</span>` : ""}
+          ${turnChips(ev.turns)}</div>
+        ${ev.evidence && !GENERIC.test(ev.evidence) ? `<div class="ev-text">${x(ev.evidence)}</div>` : ""}
+      </div>
+    </div>
+    ${levelButtons(pid, opts, aiLevel(pid), chosenLevel(pid))}
+    ${showNote ? `<div class="fix"><textarea maxlength="2000" placeholder="What should the CRE have done? (optional)"
+        oninput="noteFor('${pid}', this.value)">${x(p.note || "")}</textarea></div>`
+      : `<button type="button" class="link addnote" style="margin-top:6px" onclick="openNote('${pid}')">Add a note</button>`}`;
+}
+// Every scoring level of the parameter with its points. The AI's level is marked; clicking it
+// agrees, clicking another level disagrees with that rating, clicking the chosen one again clears it.
+function aiLevel(pid) {
+  const r = String(ai()[pid]?.rating || "").toLowerCase();
+  return Object.keys(C.data.score_options[pid] || {}).find(k => k.toLowerCase() === r) || null;
+}
+function chosenLevel(pid) {
+  const p = C.form.params[pid];
+  return !p?.verdict ? null : p.verdict === "agree" ? aiLevel(pid) : p.rating;
+}
+function levelButtons(pid, opts, aiOne, chosen) {
+  const max = Math.max(...Object.values(C.data.score_options[pid] || { 0: 0 }));
+  return `<div class="levels" role="group" aria-label="Correct rating">${opts.map(o => {
+    const pts = +points(pid, o);
+    const cls = pts >= max ? "l-full" : pts > 0 ? "l-mid" : "l-zero";
+    return `<button type="button" class="lv ${cls} ${chosen === o ? "on" : ""}" aria-pressed="${chosen === o}"
+      onclick="pickLevel('${pid}', ${x(JSON.stringify(o))})">${x(o)} · ${pts}${o === aiOne ? `<span class="ai-tag">AI</span>` : ""}</button>`;
+  }).join("")}</div>`;
+}
+function pickLevel(pid, level) {
+  const p = C.form.params[pid] ||= { verdict: null, rating: null, note: "" };
+  if (chosenLevel(pid) === level) { p.verdict = null; p.rating = null; }
+  else if (level === aiLevel(pid)) { p.verdict = "agree"; p.rating = null; }
+  else { p.verdict = "disagree"; p.rating = level; }
+  renderParam(pid);
+  touch();
+}
+function setRating(pid, value) { (C.form.params[pid] ||= {}).rating = value || null; touch(); }
+
+// The call's score with this reviewer's ratings (same rules as the server and the AI's score):
+// their level where they disagree, the AI's elsewhere; not genuine or wrong call type → 0.
+function reviewerScore() {
+  const f = C.form, rep = C.data.report;
+  let earned = 0, possible = 0;
+  for (const pid of Object.keys(ai())) {
+    const opts = C.data.score_options[pid];
+    if (!opts) continue;
+    const level = chosenLevel(pid) || aiLevel(pid);
+    earned += Number(opts[level] || 0);
+    possible += Math.max(...Object.values(opts));
+  }
+  const b = C.data.evidence.booking;
+  const aiFake = b ? b.genuine === false : rep.audit_result?.booking_genuine?.genuine === false;
+  const fake = f.booking.verdict === "disagree" ? f.booking.genuine === false : aiFake;
+  const wrongType = f.call_type.verdict === "disagree" || (f.call_type.verdict !== "agree" && rep.management_summary?.wrong_call_tagging === true);
+  if (fake || wrongType) earned = 0;
+  const pct = possible ? Math.round(1000 * earned / possible) / 10 : null;
+  return { earned, possible, pct, grade: fake || wrongType ? "Not Genuine" : null };
+}
+function updateScore() {
+  const el = document.getElementById("revScore");
+  if (!el) return;
+  const s = reviewerScore(), changed = Object.values(C.form.params).some(p => p.verdict === "disagree")
+    || C.form.booking.verdict === "disagree" || C.form.call_type.verdict === "disagree";
+  el.innerHTML = `<span class="muted">Reviewer</span> ${scoreChip(s.pct, s.grade)}
+    <span class="muted">${+s.earned.toFixed(2)}/${+s.possible.toFixed(2)}${changed ? "" : " · same as AI"}</span>`;
+}
+function noteFor(pid, value) { (C.form.params[pid] ||= { verdict: null, rating: null }).note = value; touch(); }
+function openNote(pid) {
+  (C.form.params[pid] ||= { verdict: null, rating: null, note: "" }).noteOpen = true;
+  renderParam(pid);
+  document.querySelector(`#prm-${pid} textarea`)?.focus();
+}
+function agreeRest() {
+  for (const pid of Object.keys(ai())) {
+    const p = C.form.params[pid] ||= { verdict: null, rating: null, note: "" };
+    if (!p.verdict) { p.verdict = "agree"; renderParam(pid); }
+  }
+  touch();
+}
+
+// ── Transcript flags (ASR mistakes) ──
+function toggleFlag(tid) {
+  const i = C.form.asr_flags.findIndex(f => f.turn === tid);
+  if (i >= 0) C.form.asr_flags.splice(i, 1);
+  else C.form.asr_flags.push({ turn: tid, note: "" });
+  C.form.asr_flags.sort((a, b) => a.turn.localeCompare(b.turn));
+  renderFlags();
+  if (C.tab === "tx") renderPane();
+  touch();
+}
+function renderFlags() {
+  const flags = C.form.asr_flags;
+  document.getElementById("flags").innerHTML = flags.length ? `
+    <label class="muted" style="font-size:12px;display:block;margin:12px 0 6px">Transcript lines that are wrong (what was actually said)</label>
+    ${flags.map((f, i) => `<div class="flag-row">
+      <button type="button" class="turn-chip" onclick="goTurn('${f.turn}')">${f.turn}</button>
+      <textarea maxlength="2000" placeholder="What was actually said" oninput="C.form.asr_flags[${i}].note=this.value;touch()">${x(f.note)}</textarea>
+      <button type="button" class="link" style="margin-top:6px" onclick="toggleFlag('${f.turn}')">Remove</button></div>`).join("")}`
+    : `<div class="muted" style="font-size:12px;margin-top:10px">Spotted a transcript mistake? Use ⚑ on the line in the transcript.</div>`;
+}
+
+// ── Save ──
+function payload(status) {
+  const params = {};
+  for (const [pid, p] of Object.entries(C.form.params)) {
+    if (p.verdict || (p.note || "").trim()) params[pid] = { verdict: p.verdict, rating: p.rating, note: p.note || "" };
+  }
+  return { reviewer: reviewerName(), status, params, booking: C.form.booking, call_type: C.form.call_type,
+           overall: C.form.overall, coaching: C.form.coaching, asr_flags: C.form.asr_flags };
+}
+function missing() {
+  const out = [];
+  for (const [pid, p] of Object.entries(C.form.params)) {
+    if (p.verdict === "disagree" && !p.rating) out.push(`${PL[pid] || pid}: pick the correct rating`);
+  }
+  if (C.form.call_type.verdict === "disagree" && !C.form.call_type.correct) out.push("Call type: pick the correct type");
+  return out;
+}
+async function save(status) {
+  if (C.saving) return;
+  if (!reviewerName()) await askName(true);
+  const gaps = missing();
+  if (gaps.length) { C.msg = gaps.join(" · "); renderActs(true); return; }
+  if (status === "reviewed") {
+    const unmarked = Object.keys(ai()).filter(pid => !C.form.params[pid]?.verdict).length;
+    if (unmarked && !confirm(`${unmarked} parameter${unmarked === 1 ? " has" : "s have"} no level picked. Mark the call reviewed anyway? (Unpicked parameters keep the AI's rating in your score.)`)) return;
+  }
+  C.saving = true;
+  renderActs();
+  try {
+    const saved = await getJSON(`/api/call/${enc(STEM)}/review`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload(status)) });
+    C.data.reviews.unshift(saved);
+    C.dirty = false;
+    C.msg = `Saved ${status === "reviewed" ? "as reviewed" : "as in review"} · ${when(saved.created_at)}`;
+    renderHistory();
+  } catch (error) {
+    C.msg = `Not saved: ${error.message}`;
+  }
+  C.saving = false;
+  renderActs(C.msg.startsWith("Not saved"));
+}
+function renderActs(isError) {
+  const el = document.getElementById("acts");
+  if (!el) return;
+  el.innerHTML = `
+    <button class="btn" ${C.saving ? "disabled" : ""} onclick="save('in_review')">Save · still reviewing</button>
+    <button class="btn btn-p" ${C.saving ? "disabled" : ""} onclick="save('reviewed')">${C.saving ? "Saving…" : "Mark reviewed"}</button>
+    <span class="msg" style="${isError ? "color:var(--red)" : ""}">${x(C.msg || (C.dirty ? "Unsaved changes" : ""))}</span>`;
+}
+
+function renderHistory() {
+  const list = C.data.reviews;
+  document.getElementById("history").innerHTML = list.length ? list.map((r, i) => `<div class="hist-row">
+      <span class="chip ${r.status === "reviewed" ? "c-hi" : "c-mid"}">${r.status === "reviewed" ? "Reviewed" : "In review"}</span>
+      ${r.reviewer_score ? `<span title="Score with this version's ratings">${scoreChip(r.reviewer_score.pct, r.reviewer_score.grade)}</span>` : ""}
+      <span><b>${x(r.reviewer)}</b> · ${x(when(r.created_at))}${i === 0 ? " · latest" : ""}</span>
+      <span style="margin-left:auto;display:flex;gap:12px">
+        ${i ? `<button class="link" onclick="loadVersion(${i})">Load into form</button>` : ""}
+        <button class="link del" onclick="deleteReview(${Number(r.id)})">Delete</button>
+      </span>
+    </div>`).join("") + `<div style="margin-top:10px"><button class="btn btn-sm del-all" onclick="deleteReview(null)">${
+      list.length > 1 ? `Delete whole review (${list.length} versions)` : "Delete review"}</button></div>`
+    : `<div class="empty">Not reviewed yet. Saving never overwrites: every save is kept as a version.</div>`;
+}
+
+// Delete one version, or the whole review: asks for the delete PIN, checked on the server.
+// tryPin(pin) returns true when done, or the message to show (a wrong PIN keeps the box open).
+// field: "pin" (delete PIN), "reason" (optional note) or "" (just confirm, e.g. for the admin).
+function askPin(title, text, tryPin, field = "pin", action = "Delete") {
+  return new Promise(resolve => {
+    if (document.querySelector(".modal-bg")) { resolve(null); return; }  // one box at a time
+    document.activeElement?.blur();  // Enter must not press the button behind the box again
+    const bg = document.createElement("div");
+    bg.className = "modal-bg";
+    bg.innerHTML = `<form class="modal">
+      <h2>${x(title)}</h2>
+      <p>${x(text)}</p>
+      ${field === "pin" ? `<input type="password" name="pin" inputmode="numeric" autocomplete="off" placeholder="Delete PIN" required>`
+        : field === "reason" ? `<input type="text" name="reason" maxlength="300" autocomplete="off" placeholder="Reason (optional)">` : ""}
+      <div class="pin-err" hidden></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button type="button" class="btn" data-cancel>Cancel</button>
+        <button class="btn del-btn">${x(action)}</button>
+      </div></form>`;
+    document.body.appendChild(bg);
+    const input = bg.querySelector("input") || { value: "", select() {} }, err = bg.querySelector(".pin-err"), go = bg.querySelector(".del-btn");
+    (bg.querySelector("input") || go).focus();
+    const close = value => { bg.remove(); resolve(value); };
+    bg.querySelector("[data-cancel]").onclick = () => close(null);
+    bg.addEventListener("keydown", e => { if (e.key === "Escape") close(null); });
+    bg.querySelector("form").onsubmit = async e => {
+      e.preventDefault();
+      go.disabled = true;
+      const result = await tryPin(input.value);
+      go.disabled = false;
+      if (result === true) { close(true); return; }
+      err.hidden = false;
+      err.textContent = result;
+      input.select();
+    };
+  });
+}
+
+async function deleteReview(versionId) {
+  const all = versionId == null;
+  if (C.dirty && !confirm("You have unsaved changes. Deleting reloads the form from what remains. Continue?")) return;
+  const done = await askPin(all ? "Delete the whole review?" : "Delete this version?",
+    (all ? "Every version of this call's review is removed from both dashboards." : "This version is removed from both dashboards.")
+      + (IS_ADMIN ? " Signed in as admin: no PIN needed." : ""),
+    async pin => {
+      try {
+        const r = await getJSON(`/api/call/${enc(STEM)}/review/delete`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pin, reviewer: reviewerName(), version_id: all ? null : versionId }) });
+        C.data.reviews = r.reviews || [];
+        return true;
+      } catch (error) {
+        return error.message;
+      }
+    }, IS_ADMIN ? "" : "pin");
+  if (!done) return;
+  C.form = formFrom(C.data.reviews[0]);
+  C.dirty = false;
+  render();
+  C.msg = all ? "Review deleted" : "Version deleted";
+  renderActs();
+}
+// Admin: hide this AI-audited call from both dashboards (files are kept; Restore is on the Admin page).
+async function removeCall() {
+  const done = await askPin("Remove this call?",
+    "It disappears from the reviewer dashboard, the main dashboard and the Not audited list. Nothing is deleted from disk; you can restore it from the Admin page.",
+    async reason => {
+      try {
+        await getJSON(`/api/admin/call/${enc(STEM)}/remove`, { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason, reviewer: reviewerName() }) });
+        return true;
+      } catch (error) { return error.message; }
+    }, "reason", "Remove call");
+  if (done) location.href = "/";
+}
+function loadVersion(i) {
+  if (C.dirty && !confirm("Replace your unsaved changes with this older version?")) return;
+  C.form = formFrom(C.data.reviews[i]);
+  render();
+  touch();
+}
+
+// ── Transcript and call details ──
+function setTab(tab) {
+  C.tab = tab;
+  document.querySelectorAll(".tabs .btn").forEach(b => b.classList.toggle("on", b.textContent.startsWith(tab === "tx" ? "Transcript" : "Call")));
+  renderPane();
+}
+function fmtTime(s) {
+  if (s == null) return "";
+  const m = Math.floor(s / 60), r = Math.floor(s % 60);
+  return `${m}:${String(r).padStart(2, "0")}`;
+}
+function renderPane() {
+  const el = document.getElementById("pane");
+  if (C.tab === "crm") { el.innerHTML = crmHtml(C.data.crm); return; }
+  const turns = C.data.turns;
+  if (!turns.length) { el.innerHTML = `<div class="empty">No transcript.</div>`; return; }
+  const flagged = new Set(C.form.asr_flags.map(f => f.turn));
+  el.innerHTML = turns.map(t => t.tid == null ? `<div class="turn-text" style="white-space:pre-wrap">${x(t.text)}</div>` : `
+    <div class="turn" id="turn-${t.tid}" data-start="${t.start}" data-end="${t.end}" onclick="seek(${t.start})">
+      <div class="turn-meta"><span class="turn-role ${t.role === "Agent" ? "r-agent" : "r-customer"}">${t.role === "Agent" ? "CRE" : "Customer"}</span><br>${t.tid} · ${fmtTime(t.start)}</div>
+      <div class="turn-text">${x(t.text)}</div>
+      <button class="turn-flag ${flagged.has(t.tid) ? "on" : ""}" title="${flagged.has(t.tid) ? "Remove transcript flag" : "Flag this line as transcribed wrongly"}"
+        onclick="event.stopPropagation();toggleFlag('${t.tid}')">⚑</button>
+    </div>`).join("");
+}
+function goTurn(tid) {
+  if (C.tab !== "tx") setTab("tx");
+  const row = document.getElementById(`turn-${tid}`);
+  if (!row) return;
+  row.scrollIntoView({ behavior: "smooth", block: "center" });
+  row.classList.remove("hit"); void row.offsetWidth; row.classList.add("hit");
+  seek(Number(row.dataset.start), false);
+}
+function seek(start, play = true) {
+  const a = document.getElementById("player");
+  if (!a || !isFinite(start)) return;
+  a.currentTime = start;
+  if (play) a.play().catch(() => {});
+}
+function wireAudio() {
+  const a = document.getElementById("player");
+  if (!a) return;
+  a.addEventListener("timeupdate", () => {
+    const t = a.currentTime;
+    document.querySelectorAll(".turn[data-start]").forEach(row =>
+      row.classList.toggle("now", t >= Number(row.dataset.start) && t < Number(row.dataset.end)));
+  });
+}
+
+const HIDE = new Set(["schema_version", "crm_source", "transaction_id", "cdr_id", "lead_id"]);
+function label(key) {
+  return String(key).replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, c => c.toUpperCase());
+}
+function present(v) { return v != null && v !== "" && !(Array.isArray(v) && !v.length) && !(typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length); }
+function kv(obj) {
+  const rows = Object.entries(obj).filter(([k, v]) => !HIDE.has(k) && present(v) && typeof v !== "object");
+  return rows.length ? `<dl class="kv">${rows.map(([k, v]) => `<dt>${x(label(k))}</dt><dd>${x(v === true ? "Yes" : v === false ? "No" : v)}</dd>`).join("")}</dl>` : "";
+}
+function table(list) {
+  const cols = [...new Set(list.flatMap(r => Object.keys(r || {}).filter(k => present(r[k]) && typeof r[k] !== "object")))];
+  return `<div style="overflow:auto"><table class="hist-t"><thead><tr>${cols.map(c => `<th>${x(label(c))}</th>`).join("")}</tr></thead>
+    <tbody>${list.map(r => `<tr>${cols.map(c => `<td>${x(r?.[c] ?? "")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+function crmHtml(crm) {
+  const order = ["vehicle", "service_profile", "call_meta", "cre", "disposition", "booking", "follow_up", "remarks", "customer"];
+  const keys = [...order.filter(k => k in crm), ...Object.keys(crm).filter(k => !order.includes(k) && !HIDE.has(k))];
+  const parts = keys.map(k => {
+    const v = crm[k];
+    if (!present(v)) return "";
+    if (Array.isArray(v)) return v.length && typeof v[0] === "object" ? `<div class="kv-h">${x(label(k))}</div>${table(v)}` : "";
+    if (typeof v === "object") { const body = kv(v); return body ? `<div class="kv-h">${x(label(k))}</div>${body}` : ""; }
+    return "";
+  }).join("");
+  const top = kv(crm);
+  return (top + parts) || `<div class="empty">No call details for this call.</div>`;
+}
+
+window.addEventListener("beforeunload", e => { if (C.dirty) { e.preventDefault(); e.returnValue = ""; } });
+renderWho();
+askName(false);
+load();
+</script>
+</body>
+</html>

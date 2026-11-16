@@ -46,6 +46,9 @@ def run_modern_audit(
         payload.pop("evidence_ledger", None)
         payload.pop("trigger_ledger", None)
     result = evaluate_payload(payload, **integrity_flags)
+        payload.pop("evidence_ledger", None)
+        payload.pop("trigger_ledger", None)
+    result = evaluate_payload(payload, **integrity_flags)
     if call_type == "BOOKING":\n        payload.pop("evidence_ledger", None)\n        payload.pop("trigger_ledger", None)\n    result = evaluate_payload(payload, **integrity_flags)
     if call_type == "BOOKING":
         result["booking_genuine"] = {

@@ -1,0 +1,46 @@
+name: Modern Audit Unit Tests
+
+on:
+  push:
+    branches: ["modern-audit-work"]
+    paths:
+      - "core/audit/modern_*.py"
+      - "core/audit/crm_integrity.py"
+      - "resources/modern_competency_registry.json"
+      - "schemas/modern-*.json"
+      - "tests/test_modern_*.py"
+      - "tests/fixtures/modern_*.json"
+      - "tools/validate_modern_registry.py"
+      - "tools/score_modern_evaluation.py"
+      - "tools/run_modern_audit.py"
+      - ".github/workflows/modern-audit-tests.yml"
+  pull_request:
+    paths:
+      - "core/audit/modern_*.py"
+      - "core/audit/crm_integrity.py"
+      - "resources/modern_competency_registry.json"
+      - "schemas/modern-*.json"
+      - "tests/test_modern_*.py"
+      - "tests/fixtures/modern_*.json"
+      - "tools/validate_modern_registry.py"
+      - "tools/score_modern_evaluation.py"
+      - "tools/run_modern_audit.py"
+
+jobs:
+  modern-audit-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile modern audit modules and CLIs
+        run: python -m py_compile core/audit/modern_*.py core/audit/crm_integrity.py tools/validate_modern_registry.py tools/score_modern_evaluation.py tools/run_modern_audit.py
+      - name: Run isolated modern audit tests
+        run: python -m unittest discover -s tests -p 'test_modern_*.py' -v
+      - name: Validate registry and scoring smoke cases
+        run: python tools/validate_modern_registry.py
+      - name: Run evaluation JSON through adapter CLI with deterministic CRM checks
+        run: |
+          python tools/score_modern_evaluation.py tests/fixtures/modern_evaluation_all_full.json --crm-integrity-checks tests/fixtures/modern_crm_integrity_pass.json --out /tmp/modern-score.json
+          python -c "import json; d=json.load(open('/tmp/modern-score.json')); assert d['score']['percentage']==100; assert len(d['competencies'])==12; assert d['human_review']['required'] is False; print('Evaluation + CRM fixture CLI: PASS')"

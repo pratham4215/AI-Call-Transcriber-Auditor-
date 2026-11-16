@@ -1,0 +1,193 @@
+{
+  "schema_version": "modern-audit-evaluation-v1",
+  "call_type": "BOOKING",
+  "competencies": [
+    {
+      "id": "greeting_introduction",
+      "rating": "Full",
+      "evidence": [
+        {
+          "source": "transcript",
+          "reference": "T001",
+          "quote_or_fact": "CRE greets and introduces herself."
+        }
+      ],
+      "reasoning": "Opening is complete.",
+      "confidence": "High",
+      "human_review": false
+    },
+    {
+      "id": "recording_disclosure",
+      "rating": "Full",
+      "evidence": [
+        {
+          "source": "transcript",
+          "reference": "T002",
+          "quote_or_fact": "CRE discloses recording."
+        }
+      ],
+      "reasoning": "Disclosure is clear.",
+      "confidence": "High",
+      "human_review": false
+    },
+    {
+      "id": "permission_to_talk",
+      "rating": "Full",
+      "evidence": [
+        {
+          "source": "transcript",
+          "reference": "T003",
+          "quote_or_fact": "CRE asks if customer can talk."
+        }
+      ],
+      "reasoning": "Explicit permission is obtained.",
+      "confidence": "High",
+      "human_review": false
+    },
+    {
+      "id": "customer_vehicle_identification",
+      "rating": "Full",
+      "evidence": [
+        {
+          "source": "transcript",
+          "reference": "T004",
+          "quote_or_fact": "Customer and vehicle are confirmed."
+        }
+      ],
+      "reasoning": "Both identifiers are confirmed.",
+      "confidence": "High",
+      "human_review": false
+    },
+    {
+      "id": "purpose_context",
+      "rating": "Full",
+      "evidence": [
+        {
+          "source": "transcript",
+          "reference": "T005",
+          "quote_or_fact": "CRE states call purpose."
+        }
+      ],
+      "reasoning": "Purpose is clear.",
+      "confidence": "High",
+      "human_review": false
+    },
+    {
+      "id": "customer_vehicle_understanding",
+      "rating": "Full",
+      "evidence": [
+        {
+          "source": "transcript",
+          "reference": "T006",
+          "quote_or_fact": "CRE responds to customer context."
+        }
+      ],
+      "reasoning": "Context is understood.",
+      "confidence": "High",
+      "human_review": false
+    },
+    {
+      "id": "service_knowledge_accuracy",
+      "rating": "Full",
+      "evidence": [
+        {
+          "source": "crm",
+          "reference": "vehicle.service_due",
+          "quote_or_fact": "Service is due per CRM."
+        }
+      ],
+      "reasoning": "Service guidance matches available facts.",
+      "confidence": "High",
+      "human_review": false
+    },
+    {
+      "id": "value_communication",
+      "rating": "Full",
+      "evidence": [
+        {
+          "source": "crm",
+          "reference": "warranty.status",
+          "quote_or_fact": "Eligible benefit is available."
+        }
+      ],
+      "reasoning": "Eligible benefit is communicated.",
+      "confidence": "High",
+      "human_review": false
+    },
+    {
+      "id": "customer_interaction_resolution",
+      "rating": "Full",
+      "evidence": [
+        {
+          "source": "transcript",
+          "reference": "T007",
+          "quote_or_fact": "CRE answers the customer's question."
+        }
+      ],
+      "reasoning": "Interaction is appropriate.",
+      "confidence": "High",
+      "human_review": false
+    },
+    {
+      "id": "customer_action_disposition",
+      "rating": "Full",
+      "evidence": [
+        {
+          "source": "transcript",
+          "reference": "T008",
+          "quote_or_fact": "Customer agrees to next step."
+        }
+      ],
+      "reasoning": "Disposition is clear.",
+      "confidence": "High",
+      "human_review": false
+    },
+    {
+      "id": "crm_documentation_integrity",
+      "rating": "Full",
+      "evidence": [
+        {
+          "source": "crm",
+          "reference": "crm.booking",
+          "quote_or_fact": "CRM outcome and remarks match call."
+        }
+      ],
+      "reasoning": "Applicable documentation is consistent.",
+      "confidence": "High",
+      "human_review": false
+    },
+    {
+      "id": "professional_communication_closure",
+      "rating": "Full",
+      "evidence": [
+        {
+          "source": "transcript",
+          "reference": "T009",
+          "quote_or_fact": "CRE closes professionally."
+        }
+      ],
+      "reasoning": "Communication and closure are professional.",
+      "confidence": "High",
+      "human_review": false
+    }
+  ],
+  "human_review": {
+    "required": false,
+    "reasons": []
+  },
+  "booking_genuine": {
+    "genuine": true,
+    "commitment_type": "date_time_confirmed",
+    "customer_agreement_confirmed": true,
+    "agreement_turn_id": "T008",
+    "final_customer_stance": "confirmed",
+    "final_stance_turn_id": "T008",
+    "date_confirmed": true,
+    "date_turn_id": "T008",
+    "time_confirmed": true,
+    "time_turn_id": "T008",
+    "address_or_location_confirmed": true,
+    "address_or_location_turn_id": "T008",
+    "fake_booking_reason": "none"
+  }
+}

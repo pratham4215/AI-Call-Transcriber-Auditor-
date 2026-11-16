@@ -1,0 +1,151 @@
+{
+  "registry_version": "modern-cre-audit-12-v1",
+  "status": "draft_for_review",
+  "total_points": 100,
+  "call_types": ["BOOKING", "FOLLOW_UPS", "SERVICE_NT_REQUIRED", "ESCALATION"],
+  "scoring": {
+    "ratings": ["Full", "Partial", "Zero", "N/A"],
+    "partial_policy": "competency-specific; do not assume 50% unless explicitly configured",
+    "na_policy": "full weight credited and retained in denominator; only where competency rule allows N/A; mandatory reason",
+    "critical_override": "Fake Booking and Wrong Call Tagging force final call score to 0; retain competency marks",
+    "critical_zero": "flag for human review/risk; not a generic final-score override",
+    "crm_integrity": "10 points; N/A prohibited; Full=10, Partial=5, Zero=0; checks are diagnostic and non-additive"
+  },
+  "competencies": [
+    {
+      "id": "greeting_introduction",
+      "name": "Greeting & Introduction",
+      "weight": 8,
+      "definition": "CRE opens professionally, greets the customer, identifies herself and Kataria.",
+      "full": "Clear greeting plus CRE/dealership introduction.",
+      "partial": "Greeting or introduction is present but incomplete.",
+      "zero": "Neither a usable greeting nor introduction.",
+      "allow_na": false,
+      "critical": false
+    },
+    {
+      "id": "recording_disclosure",
+      "name": "Recording Disclosure & Compliance",
+      "weight": 6,
+      "definition": "CRE clearly discloses call recording near the beginning.",
+      "full": "Clear disclosure near the beginning.",
+      "partial": "Disclosure is incomplete or unclear but recognizably attempted.",
+      "zero": "Missing, materially unclear, or too late.",
+      "na_rule": "Only when the customer interrupts before disclosure can be completed; otherwise N/A is prohibited.",
+      "allow_na": true,
+      "critical": true
+    },
+    {
+      "id": "permission_to_talk",
+      "name": "Permission to Talk",
+      "weight": 10,
+      "definition": "CRE checks whether the customer can talk before proceeding.",
+      "full": "Explicit permission check.",
+      "partial": "Indirect/ambiguous check that reasonably seeks availability.",
+      "zero": "Proceeds without checking.",
+      "allow_na": false,
+      "critical": false
+    },
+    {
+      "id": "customer_vehicle_identification",
+      "name": "Customer & Vehicle Identification",
+      "weight": 6,
+      "definition": "CRE confirms the customer and vehicle identity accurately.",
+      "full": "Both customer and vehicle are confirmed.",
+      "partial": "Only one is confirmed.",
+      "zero": "Neither is confirmed or identity is materially wrong.",
+      "allow_na": false,
+      "critical": false
+    },
+    {
+      "id": "purpose_context",
+      "name": "Purpose & Context Establishment",
+      "weight": 6,
+      "definition": "CRE explains why the call is being made and establishes relevant context.",
+      "full": "Purpose is clear and contextually appropriate.",
+      "partial": "Purpose is vague or context is incomplete.",
+      "zero": "Purpose is missing or materially misleading.",
+      "allow_na": false,
+      "critical": false
+    },
+    {
+      "id": "customer_vehicle_understanding",
+      "name": "Customer & Vehicle Understanding",
+      "weight": 8,
+      "definition": "CRE understands the customer's need and relevant vehicle/service context.",
+      "full": "Relevant facts are understood and reflected in the response.",
+      "partial": "Basic understanding with important gaps.",
+      "zero": "Misunderstands or ignores material context.",
+      "allow_na": false,
+      "critical": false
+    },
+    {
+      "id": "service_knowledge_accuracy",
+      "name": "Service Knowledge & Accuracy",
+      "weight": 10,
+      "definition": "CRE provides accurate, relevant service information based on available customer/vehicle context.",
+      "full": "Accurate and context-relevant information.",
+      "partial": "Generally correct but incomplete or insufficiently tailored.",
+      "zero": "Materially incorrect, misleading, or fails an applicable service-information requirement.",
+      "allow_na": false,
+      "critical": false
+    },
+    {
+      "id": "value_communication",
+      "name": "Value Communication",
+      "weight": 10,
+      "definition": "CRE communicates eligible customer benefits/offers when supported by CRM and call context.",
+      "full": "Relevant eligible value/benefit is accurately communicated.",
+      "partial": "Offer/benefit is attempted but incomplete or unclear.",
+      "zero": "Eligible benefit is ignored or communicated misleadingly.",
+      "na_rule": "N/A only when CRM/context establishes no eligible product or opportunity.",
+      "allow_na": true,
+      "critical": false
+    },
+    {
+      "id": "customer_interaction_resolution",
+      "name": "Customer Interaction & Resolution",
+      "weight": 8,
+      "definition": "CRE listens, responds appropriately, handles questions/objections and resolves or responsibly routes concerns.",
+      "full": "Acknowledges concern, responds appropriately and gives a workable resolution/next step.",
+      "partial": "Response is adequate but generic or incomplete.",
+      "zero": "Dismissive, inappropriate, argumentative, or leaves a material concern unmanaged.",
+      "allow_na": false,
+      "critical": false
+    },
+    {
+      "id": "customer_action_disposition",
+      "name": "Customer Action & Disposition",
+      "weight": 10,
+      "definition": "Call outcome and customer action/decision are clear; CRE accurately reflects the disposition.",
+      "full": "Outcome/decision and next action are clear; refusal itself is not penalized.",
+      "partial": "Outcome is broadly clear but important action detail is missing.",
+      "zero": "Outcome is missing, contradicted, or materially misrepresented.",
+      "allow_na": true,
+      "critical": false
+    },
+    {
+      "id": "crm_documentation_integrity",
+      "name": "CRM & Documentation Integrity",
+      "weight": 10,
+      "definition": "CRM disposition, task/follow-up, CRE remarks and applicable customer remarks accurately reflect the call.",
+      "full": "All applicable CRM/documentation checks are accurate and complete.",
+      "partial": "Minor documentation defect without material outcome distortion.",
+      "zero": "Missing mandatory CRE remarks or material CRM inconsistency, incorrect/misleading tagging, or material inaccurate documentation.",
+      "allow_na": false,
+      "critical": true,
+      "aggregation": "Non-additive checks: Booking, Follow-up, SNR, Escalation, CRE remarks, Customer remarks. Full=10, Partial=5, Zero=0. Correct checks cannot compensate for a material failure."
+    },
+    {
+      "id": "professional_communication_closure",
+      "name": "Professional Communication & Closure",
+      "weight": 8,
+      "definition": "CRE communicates clearly, respectfully and professionally and closes the interaction appropriately.",
+      "full": "Clear, courteous, composed communication and suitable closure/thanks.",
+      "partial": "Generally professional but closure or communication has a minor gap.",
+      "zero": "Unprofessional, disrespectful, confusing, or no appropriate closure.",
+      "allow_na": false,
+      "critical": false
+    }
+  ]
+}

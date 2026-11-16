@@ -102,7 +102,7 @@ def build_modern_evaluation_prompt(
                         "id": {"enum": [s.competency_id for s in specs]},
                         "rating": {"enum": ["Full", "Partial", "Zero", "N/A"]},
                         "evidence": {
-                            "type": "array",
+                            "type": "array", "minItems": 1,
                             "items": {
                                 "type": "object", "additionalProperties": False,
                                 "required": ["source", "reference", "quote_or_fact"],

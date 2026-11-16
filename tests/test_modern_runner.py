@@ -3,7 +3,7 @@ import json
 import unittest
 from pathlib import Path
 
-from core.audit.modern_runner import run_modern_audit
+from core.audit.modern_runner import run_modern_audit\nfrom core.audit.pipeline import Turn
 
 
 class FakeClient:

@@ -16,6 +16,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("evaluation_json", type=Path, help="JSON matching modern-audit-evaluation-v1")
     parser.add_argument("--out", type=Path, default=None, help="Output JSON path (default: stdout)")
+    parser.add_argument("--crm-integrity-checks", type=Path, default=None, help="Trusted deterministic CRM checks JSON")
     parser.add_argument("--wrong-call-tagging", action="store_true")
     parser.add_argument("--fake-booking", action="store_true")
     parser.add_argument("--critical-crm-inconsistency", action="store_true")
@@ -26,8 +27,12 @@ def main() -> int:
 
     try:
         payload = json.loads(args.evaluation_json.read_text(encoding="utf-8"))
+        crm_checks = json.loads(args.crm_integrity_checks.read_text(encoding="utf-8")) if args.crm_integrity_checks else None
+        if crm_checks is not None and not isinstance(crm_checks, dict):
+            raise ValueError("CRM integrity checks must be a JSON object")
         result = evaluate_payload(
             payload,
+            crm_integrity_checks=crm_checks,
             wrong_call_tagging=args.wrong_call_tagging,
             fake_booking=args.fake_booking,
             critical_crm_inconsistency=args.critical_crm_inconsistency,

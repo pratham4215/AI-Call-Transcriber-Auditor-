@@ -42,14 +42,11 @@ def run_modern_audit(
         if booking_needs_adjudication(payload, list(turns), booked_on_earlier_call(dict(crm_details or {}))):
             integrity_flags["low_confidence_critical_decision"] = True
             integrity_flags["contradictory_evidence"] = True
+
     if call_type == "BOOKING":
         payload.pop("evidence_ledger", None)
         payload.pop("trigger_ledger", None)
     result = evaluate_payload(payload, **integrity_flags)
-        payload.pop("evidence_ledger", None)
-        payload.pop("trigger_ledger", None)
-    result = evaluate_payload(payload, **integrity_flags)
-    if call_type == "BOOKING":\n        payload.pop("evidence_ledger", None)\n        payload.pop("trigger_ledger", None)\n    result = evaluate_payload(payload, **integrity_flags)
     if call_type == "BOOKING":
         result["booking_genuine"] = {
             key: value for key, value in payload["booking_genuine"].items()

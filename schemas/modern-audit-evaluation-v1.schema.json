@@ -5,60 +5,257 @@
   "description": "Proposed versioned contract for evidence-first competency evaluations. This is not wired into the production pipeline yet.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "call_type", "competencies", "human_review"],
+  "required": [
+    "schema_version",
+    "call_type",
+    "competencies",
+    "human_review"
+  ],
   "properties": {
-    "schema_version": { "const": "modern-audit-evaluation-v1" },
+    "schema_version": {
+      "const": "modern-audit-evaluation-v1"
+    },
     "call_type": {
-      "enum": ["BOOKING", "FOLLOW_UPS", "SERVICE_NT_REQUIRED", "ESCALATION"]
+      "enum": [
+        "BOOKING",
+        "FOLLOW_UPS",
+        "SERVICE_NT_REQUIRED",
+        "ESCALATION"
+      ]
     },
     "competencies": {
       "type": "array",
-      "items": { "$ref": "#/$defs/competency" },
+      "items": {
+        "$ref": "#/$defs/competency"
+      },
       "minItems": 1
     },
     "human_review": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["required", "reasons"],
+      "required": [
+        "required",
+        "reasons"
+      ],
       "properties": {
-        "required": { "type": "boolean" },
-        "reasons": { "type": "array", "items": { "type": "string" } }
+        "required": {
+          "type": "boolean"
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
+    },
+    "booking_genuine": {
+      "$ref": "#/$defs/booking_genuine"
     }
   },
   "$defs": {
     "competency": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "rating", "evidence", "reasoning", "confidence", "human_review"],
+      "required": [
+        "id",
+        "rating",
+        "evidence",
+        "reasoning",
+        "confidence",
+        "human_review"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "rating": { "enum": ["Full", "Partial", "Zero", "N/A"] },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rating": {
+          "enum": [
+            "Full",
+            "Partial",
+            "Zero",
+            "N/A"
+          ]
+        },
         "evidence": {
           "type": "array",
           "minItems": 1,
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["source", "reference", "quote_or_fact"],
+            "required": [
+              "source",
+              "reference",
+              "quote_or_fact"
+            ],
             "properties": {
-              "source": { "enum": ["transcript", "crm"] },
-              "reference": { "type": "string", "minLength": 1 },
-              "quote_or_fact": { "type": "string", "minLength": 1 }
+              "source": {
+                "enum": [
+                  "transcript",
+                  "crm"
+                ]
+              },
+              "reference": {
+                "type": "string",
+                "minLength": 1
+              },
+              "quote_or_fact": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         },
-        "reasoning": { "type": "string", "minLength": 1 },
-        "na_reason": { "type": ["string", "null"] },
-        "confidence": { "enum": ["High", "Medium", "Low"] },
-        "human_review": { "type": "boolean" }
+        "reasoning": {
+          "type": "string",
+          "minLength": 1
+        },
+        "na_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidence": {
+          "enum": [
+            "High",
+            "Medium",
+            "Low"
+          ]
+        },
+        "human_review": {
+          "type": "boolean"
+        }
       },
       "allOf": [
         {
-          "if": { "properties": { "rating": { "const": "N/A" } }, "required": ["rating"] },
-          "then": { "properties": { "na_reason": { "type": "string", "minLength": 1 } }, "required": ["na_reason"] }
+          "if": {
+            "properties": {
+              "rating": {
+                "const": "N/A"
+              }
+            },
+            "required": [
+              "rating"
+            ]
+          },
+          "then": {
+            "properties": {
+              "na_reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "na_reason"
+            ]
+          }
         }
       ]
+    },
+    "booking_genuine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "genuine",
+        "commitment_type",
+        "customer_agreement_confirmed",
+        "agreement_turn_id",
+        "final_customer_stance",
+        "final_stance_turn_id",
+        "date_confirmed",
+        "date_turn_id",
+        "time_confirmed",
+        "time_turn_id",
+        "address_or_location_confirmed",
+        "address_or_location_turn_id",
+        "fake_booking_reason"
+      ],
+      "properties": {
+        "genuine": {
+          "type": "boolean"
+        },
+        "commitment_type": {
+          "enum": [
+            "date_time_confirmed",
+            "date_only",
+            "existing_booking_confirmed",
+            "vague_promise",
+            "declined",
+            "not_discussed",
+            "no_customer_agreement"
+          ]
+        },
+        "customer_agreement_confirmed": {
+          "type": "boolean"
+        },
+        "agreement_turn_id": {
+          "type": "string"
+        },
+        "final_customer_stance": {
+          "enum": [
+            "confirmed",
+            "conditional",
+            "declined",
+            "cancelled",
+            "disputed",
+            "not_discussed",
+            "unclear"
+          ]
+        },
+        "final_stance_turn_id": {
+          "type": "string"
+        },
+        "date_confirmed": {
+          "type": "boolean"
+        },
+        "date_turn_id": {
+          "type": "string"
+        },
+        "time_confirmed": {
+          "type": "boolean"
+        },
+        "time_turn_id": {
+          "type": "string"
+        },
+        "address_or_location_confirmed": {
+          "type": "boolean"
+        },
+        "address_or_location_turn_id": {
+          "type": "string"
+        },
+        "fake_booking_reason": {
+          "enum": [
+            "none",
+            "explicit_decline",
+            "explicit_cancellation",
+            "customer_disputed_booking",
+            "no_customer_agreement",
+            "no_booking_discussion",
+            "conditional_or_vague_booking"
+          ]
+        }
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "call_type": {
+            "const": "BOOKING"
+          }
+        },
+        "required": [
+          "call_type"
+        ]
+      },
+      "then": {
+        "required": [
+          "booking_genuine"
+        ]
+      }
+    }
+  ]
 }

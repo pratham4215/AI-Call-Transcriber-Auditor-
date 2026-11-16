@@ -43,7 +43,7 @@ def run_modern_audit(
             integrity_flags["low_confidence_critical_decision"] = True
             integrity_flags["contradictory_evidence"] = True
 
-    result = evaluate_payload(payload, **integrity_flags)
+    if call_type == "BOOKING":\n        payload.pop("evidence_ledger", None)\n        payload.pop("trigger_ledger", None)\n    result = evaluate_payload(payload, **integrity_flags)
     if call_type == "BOOKING":
         result["booking_genuine"] = {
             key: value for key, value in payload["booking_genuine"].items()

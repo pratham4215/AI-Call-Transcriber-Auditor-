@@ -8,7 +8,7 @@
       "evidence": [
         {
           "source": "transcript",
-          "reference": "T-01",
+          "reference": "T001",
           "quote_or_fact": "CRE greets and introduces herself."
         }
       ],
@@ -22,7 +22,7 @@
       "evidence": [
         {
           "source": "transcript",
-          "reference": "T-02",
+          "reference": "T002",
           "quote_or_fact": "CRE discloses recording."
         }
       ],
@@ -36,7 +36,7 @@
       "evidence": [
         {
           "source": "transcript",
-          "reference": "T-03",
+          "reference": "T003",
           "quote_or_fact": "CRE asks if customer can talk."
         }
       ],
@@ -50,7 +50,7 @@
       "evidence": [
         {
           "source": "transcript",
-          "reference": "T-04",
+          "reference": "T004",
           "quote_or_fact": "Customer and vehicle are confirmed."
         }
       ],
@@ -64,7 +64,7 @@
       "evidence": [
         {
           "source": "transcript",
-          "reference": "T-05",
+          "reference": "T005",
           "quote_or_fact": "CRE states call purpose."
         }
       ],
@@ -78,7 +78,7 @@
       "evidence": [
         {
           "source": "transcript",
-          "reference": "T-06",
+          "reference": "T006",
           "quote_or_fact": "CRE responds to customer context."
         }
       ],
@@ -120,7 +120,7 @@
       "evidence": [
         {
           "source": "transcript",
-          "reference": "T-07",
+          "reference": "T007",
           "quote_or_fact": "CRE answers the customer's question."
         }
       ],
@@ -134,7 +134,7 @@
       "evidence": [
         {
           "source": "transcript",
-          "reference": "T-08",
+          "reference": "T008",
           "quote_or_fact": "Customer agrees to next step."
         }
       ],
@@ -162,7 +162,7 @@
       "evidence": [
         {
           "source": "transcript",
-          "reference": "T-09",
+          "reference": "T009",
           "quote_or_fact": "CRE closes professionally."
         }
       ],
@@ -179,15 +179,15 @@
     "genuine": true,
     "commitment_type": "date_time_confirmed",
     "customer_agreement_confirmed": true,
-    "agreement_turn_id": "T-08",
+    "agreement_turn_id": "T008",
     "final_customer_stance": "confirmed",
-    "final_stance_turn_id": "T-08",
+    "final_stance_turn_id": "T008",
     "date_confirmed": true,
-    "date_turn_id": "T-08",
+    "date_turn_id": "T008",
     "time_confirmed": true,
-    "time_turn_id": "T-08",
+    "time_turn_id": "T008",
     "address_or_location_confirmed": true,
-    "address_or_location_turn_id": "T-08",
+    "address_or_location_turn_id": "T008",
     "fake_booking_reason": "none"
   }
 }

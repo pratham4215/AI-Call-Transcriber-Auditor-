@@ -175,8 +175,9 @@ def build_modern_evaluation_prompt(
                 "address_or_location_confirmed": {"type": "boolean"},
                 "address_or_location_turn_id": {"type": "string"},
                 "fake_booking_reason": {"enum": [
-                    "none", "no_customer_agreement", "date_only", "vague_promise",
-                    "declined", "cancelled", "disputed", "no_booking_discussion",
+                    "none", "explicit_decline", "explicit_cancellation",
+                    "customer_disputed_booking", "no_customer_agreement",
+                    "no_booking_discussion", "conditional_or_vague_booking",
                 ]},
             },
         }

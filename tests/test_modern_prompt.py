@@ -13,8 +13,8 @@ class ModernPromptTests(unittest.TestCase):
         ]
         system, user, schema = build_modern_evaluation_prompt(turns, "BOOKING", {"warranty": "active"})
         self.assertEqual(user.count("=== COMPLETE TRANSCRIPT"), 1)
-        self.assertEqual(user.count("T-1 [Agent]:"), 1)
-        self.assertEqual(user.count("T-2 [Customer]:"), 1)
+        self.assertEqual(user.count("T001 [Agent]:"), 1)
+        self.assertEqual(user.count("T002 [Customer]:"), 1)
         self.assertNotIn("weight_not_for_model", user)
         self.assertNotIn('"weight":', user)
         self.assertIn("evaluate the entire conversation once", system.lower())

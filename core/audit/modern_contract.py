@@ -42,8 +42,8 @@ def validate_modern_evaluation(payload: Any) -> List[str]:
         if not isinstance(bg, Mapping):
             errors.append("booking_genuine must be an object for BOOKING")
         else:
-            if set(bg) != BOOKING_FIELDS:
-                errors.append("booking_genuine must contain exactly the required booking fields")
+            if not BOOKING_FIELDS.issubset(set(bg)) or set(bg) - (BOOKING_FIELDS | {"evidence", "too_short"}):
+                errors.append("booking_genuine must contain required fields (optional: evidence, too_short)")
             for field in ("genuine", "customer_agreement_confirmed", "date_confirmed", "time_confirmed", "address_or_location_confirmed"):
                 if not isinstance(bg.get(field), bool):
                     errors.append(f"booking_genuine.{field} must be boolean")

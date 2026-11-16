@@ -25,11 +25,13 @@ class ModernRunnerTests(unittest.TestCase):
     def test_one_model_call_then_python_score(self):
         fixture = Path(__file__).parent / "fixtures" / "modern_evaluation_all_full.json"
         payload = json.loads(fixture.read_text(encoding="utf-8"))
+        payload["call_type"] = "FOLLOW_UPS"
+        payload.pop("booking_genuine", None)
         client = FakeClient(payload)
         result = run_modern_audit(
             client,
             [{"index": 1, "speaker": "Agent", "text": "Hello"}],
-            "BOOKING",
+            "FOLLOW_UPS",
             {"vehicle": {"kms": 10000}},
         )
         self.assertEqual(client.calls, 1)

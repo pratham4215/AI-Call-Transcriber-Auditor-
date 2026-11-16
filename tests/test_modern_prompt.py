@@ -17,7 +17,7 @@ class ModernPromptTests(unittest.TestCase):
         self.assertEqual(user.count("T-2 [Customer]:"), 1)
         self.assertNotIn("weight_not_for_model", user)
         self.assertNotIn('"weight":', user)
-        self.assertIn("read the complete conversation once", system.lower())
+        self.assertIn("evaluate the entire conversation once", system.lower())
         self.assertEqual(schema["properties"]["call_type"]["const"], "BOOKING")
         self.assertEqual(schema["properties"]["competencies"]["minItems"], 12)
         json.dumps(schema)  # schema is JSON serializable

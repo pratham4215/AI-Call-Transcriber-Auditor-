@@ -6,7 +6,7 @@ the Python scoring engine owns all points and overrides.
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, Iterable, Mapping, Sequence, Tuple
+from typing import Any, Dict, Mapping, Sequence, Tuple
 
 from .modern_registry import load_registry
 
@@ -67,7 +67,7 @@ def build_modern_evaluation_prompt(
     competency_lines = []
     for row in raw["competencies"]:
         competency_lines.append(json.dumps({
-            "id": row["id"], "name": row["name"], "weight_not_for_model": row["weight"],
+            "id": row["id"], "name": row["name"],
             "definition": row["definition"], "full": row["full"], "partial": row["partial"],
             "zero": row["zero"], "na_rule": row.get("na_rule"),
             "allow_na": row["allow_na"],
@@ -116,7 +116,7 @@ def build_modern_evaluation_prompt(
                         "reasoning": {"type": "string", "minLength": 1},
                         "na_reason": {"type": ["string", "null"]},
                         "confidence": {"enum": ["High", "Medium", "Low"]},
-                        "human_review": {"type": "boolean"},
+                        "human_review": {"type": "boolean},
                     },
                 },
             },

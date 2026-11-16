@@ -50,6 +50,13 @@ class ModernAdapterTests(unittest.TestCase):
         self.assertEqual(result["crm_integrity_diagnostics"]["source"], "deterministic_crm_rules")
         self.assertTrue(result["human_review"]["required"])
 
+    def test_recording_zero_sets_compliance_flag(self):
+        p = payload()
+        next(item for item in p["competencies"] if item["id"] == "recording_disclosure")["rating"] = "Zero"
+        result = evaluate_payload(p)
+        self.assertTrue(result["compliance_flags"]["recording_disclosure_failure"])
+        self.assertEqual(result["compliance_flags"]["recording_disclosure_rating"], "Zero")
+
     def test_incomplete_competency_set_rejected(self):
         p = payload()
         p["competencies"].pop()

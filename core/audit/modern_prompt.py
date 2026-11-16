@@ -130,4 +130,52 @@ def build_modern_evaluation_prompt(
             },
         },
     }
+
+    if call_type == "BOOKING":
+        user_prompt += (
+            "\n\n=== BOOKING GENUINENESS CONTROL ===\n"
+            "A CRM booking tag is not proof of a genuine appointment. Confirm explicit Customer "
+            "agreement and a dated appointment commitment from Customer turns. CRE-only claims, "
+            "a vague promise, a date without Customer agreement, or explicit Customer decline/"
+            "cancellation/dispute are not genuine. A booking made on an earlier call may be "
+            "confirmed on this follow-up without repeating date/time. If too short or ambiguous, "
+            "do not invent; flag human review. Cite exact Customer T-IDs for agreement/date.\n"
+            "=== END BOOKING CONTROL ==="
+        )
+        schema["required"].append("booking_genuine")
+        schema["properties"]["booking_genuine"] = {
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "genuine", "commitment_type", "customer_agreement_confirmed", "agreement_turn_id",
+                "final_customer_stance", "final_stance_turn_id", "date_confirmed", "date_turn_id",
+                "time_confirmed", "time_turn_id", "address_or_location_confirmed",
+                "address_or_location_turn_id", "fake_booking_reason",
+            ],
+            "properties": {
+                "genuine": {"type": "boolean"},
+                "commitment_type": {"enum": [
+                    "date_time_confirmed", "date_only", "existing_booking_confirmed",
+                    "vague_promise", "declined", "not_discussed", "no_customer_agreement",
+                ]},
+                "customer_agreement_confirmed": {"type": "boolean"},
+                "agreement_turn_id": {"type": "string"},
+                "final_customer_stance": {"enum": [
+                    "confirmed", "conditional", "declined", "cancelled",
+                    "disputed", "not_discussed", "unclear",
+                ]},
+                "final_stance_turn_id": {"type": "string"},
+                "date_confirmed": {"type": "boolean"},
+                "date_turn_id": {"type": "string"},
+                "time_confirmed": {"type": "boolean"},
+                "time_turn_id": {"type": "string"},
+                "address_or_location_confirmed": {"type": "boolean"},
+                "address_or_location_turn_id": {"type": "string"},
+                "fake_booking_reason": {"enum": [
+                    "none", "no_customer_agreement", "date_only", "vague_promise",
+                    "declined", "cancelled", "disputed", "no_booking_discussion",
+                ]},
+            },
+        }
+
     return SYSTEM_PROMPT, user_prompt, schema

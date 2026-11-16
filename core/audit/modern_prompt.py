@@ -116,7 +116,7 @@ def build_modern_evaluation_prompt(
                         "reasoning": {"type": "string", "minLength": 1},
                         "na_reason": {"type": ["string", "null"]},
                         "confidence": {"enum": ["High", "Medium", "Low"]},
-                        "human_review": {"type": "boolean},
+                        "human_review": {"type": "boolean"},
                     },
                 },
             },

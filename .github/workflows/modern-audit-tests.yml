@@ -4,15 +4,17 @@ on:
   push:
     branches: ["modern-audit-work"]
     paths:
-      - "core/audit/modern_contract.py"
-      - "core/audit/modern_scoring.py"
+      - "core/audit/modern_*.py"
+      - "resources/modern_competency_registry.json"
       - "tests/test_modern_*.py"
+      - "tools/validate_modern_registry.py"
       - ".github/workflows/modern-audit-tests.yml"
   pull_request:
     paths:
-      - "core/audit/modern_contract.py"
-      - "core/audit/modern_scoring.py"
+      - "core/audit/modern_*.py"
+      - "resources/modern_competency_registry.json"
       - "tests/test_modern_*.py"
+      - "tools/validate_modern_registry.py"
 
 jobs:
   modern-audit-unit-tests:
@@ -24,3 +26,5 @@ jobs:
           python-version: "3.11"
       - name: Run isolated modern audit tests
         run: python -m unittest discover -s tests -p 'test_modern_*.py' -v
+      - name: Validate registry and scoring smoke cases
+        run: python tools/validate_modern_registry.py

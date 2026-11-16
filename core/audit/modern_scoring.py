@@ -1,13 +1,13 @@
 """Deterministic scoring for modern competency audits.
 
-No model-generated points are accepted. The caller supplies the approved competency
-weight registry and validated ratings. N/A receives full credit by the currently
-recorded project decision; revisit that policy before production rollout.
+No model-generated points are accepted. N/A receives full credit and remains
+in the denominator per the currently recorded project decision; confirm this
+policy before production rollout.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Iterable, Mapping, Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
 RATINGS = {"Full", "Partial", "Zero", "N/A"}
 
@@ -46,6 +46,7 @@ class AuditScore:
     percentage: float
     overridden: bool = False
     override_reason: Optional[str] = None
+    critical_zero_ids: tuple[str, ...] = ()
 
 
 def validate_registry(registry: Sequence[CompetencySpec], expected_total: float = 100.0) -> None:
@@ -67,25 +68,23 @@ def score_competencies(
     wrong_call_tagging: bool = False,
     fake_booking: bool = False,
 ) -> AuditScore:
-    """Score exactly the registry entries and apply integrity overrides last.
+    """Score registry entries and apply only approved integrity overrides.
 
-    N/A is full credit and remains in the denominator (project decision).
-    A competency may be N/A only if its registry spec allows it and a reason
-    is supplied. Missing/invalid ratings fail closed to an exception.
+    Critical competency Zero is surfaced for risk/review; it does not itself
+    force total score to zero. Fake Booking and Wrong Call Tagging are explicit
+    final-score overrides. Individual competency marks remain unchanged.
     """
     validate_registry(registry, expected_total)
     expected_ids = {s.competency_id for s in registry}
-    unknown = set(ratings) - expected_ids
-    missing = expected_ids - set(ratings)
+    unknown, missing = set(ratings) - expected_ids, expected_ids - set(ratings)
     if unknown:
         raise ValueError(f"unknown competency IDs: {sorted(unknown)}")
     if missing:
         raise ValueError(f"missing competency ratings: {sorted(missing)}")
 
     results = []
-    earned_total = 0.0
-    possible_total = 0.0
-    critical_zero = False
+    earned_total = possible_total = 0.0
+    critical_zero_ids = []
     for spec in registry:
         entry = ratings[spec.competency_id]
         if not isinstance(entry, Mapping):
@@ -103,13 +102,11 @@ def score_competencies(
         else:
             if na_reason not in (None, ""):
                 raise ValueError(f"{spec.competency_id}: na_reason only applies to N/A")
-            points = {
-                "Full": spec.weight,
-                "Partial": spec.weight * spec.partial_fraction,
-                "Zero": 0.0,
-            }[rating]
+            points = {"Full": spec.weight,
+                      "Partial": spec.weight * spec.partial_fraction,
+                      "Zero": 0.0}[rating]
         if spec.critical and rating == "Zero":
-            critical_zero = True
+            critical_zero_ids.append(spec.competency_id)
         results.append(CompetencyResult(
             spec.competency_id, str(rating), spec.weight, round(points, 4),
             str(na_reason).strip() if rating == "N/A" else None,
@@ -121,13 +118,8 @@ def score_competencies(
     overridden = bool(reason)
     if overridden:
         earned_total = 0.0
-    elif critical_zero:
-        # Critical-zero policy forces the final score to zero while preserving
-        # each competency's earned points for diagnostics.
-        reason = "CRITICAL_COMPETENCY_ZERO"
-        overridden = True
-        earned_total = 0.0
-
     percentage = round(100 * earned_total / possible_total, 2) if possible_total else 0.0
-    return AuditScore(tuple(results), round(earned_total, 4), round(possible_total, 4),
-                      percentage, overridden, reason)
+    return AuditScore(
+        tuple(results), round(earned_total, 4), round(possible_total, 4),
+        percentage, overridden, reason, tuple(critical_zero_ids),
+    )

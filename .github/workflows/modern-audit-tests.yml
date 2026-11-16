@@ -5,20 +5,24 @@ on:
     branches: ["modern-audit-work"]
     paths:
       - "core/audit/modern_*.py"
+      - "core/audit/crm_integrity.py"
       - "resources/modern_competency_registry.json"
       - "tests/test_modern_*.py"
       - "tests/fixtures/modern_*.json"
       - "tools/validate_modern_registry.py"
       - "tools/score_modern_evaluation.py"
+      - "tools/run_modern_audit.py"
       - ".github/workflows/modern-audit-tests.yml"
   pull_request:
     paths:
       - "core/audit/modern_*.py"
+      - "core/audit/crm_integrity.py"
       - "resources/modern_competency_registry.json"
       - "tests/test_modern_*.py"
       - "tests/fixtures/modern_*.json"
       - "tools/validate_modern_registry.py"
       - "tools/score_modern_evaluation.py"
+      - "tools/run_modern_audit.py"
 
 jobs:
   modern-audit-unit-tests:
@@ -28,6 +32,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Compile modern audit modules and CLIs
+        run: python -m py_compile core/audit/modern_*.py core/audit/crm_integrity.py tools/validate_modern_registry.py tools/score_modern_evaluation.py tools/run_modern_audit.py
       - name: Run isolated modern audit tests
         run: python -m unittest discover -s tests -p 'test_modern_*.py' -v
       - name: Validate registry and scoring smoke cases

@@ -31,15 +31,15 @@ This document records repository facts and the implementation sequence. It is no
 
 ## Implementation sequence
 
-- [ ] Freeze the approved competency registry and weights (source workbook + approved new design).
-- [ ] Define a versioned evaluation JSON contract.
-- [ ] Add validation for required IDs, rating enums, evidence, N/A reason and confidence.
-- [ ] Implement deterministic scoring from the registry (including N/A and critical overrides).
-- [ ] Integrate evaluation contract into pipeline without changing transcription/import.
-- [ ] Add unit tests for score math, applicability, invalid model output and overrides.
-- [ ] Add fixture-based integration tests for each call type.
-- [ ] Run a human-audit comparison pilot; report agreement and error categories.
-- [ ] Only then enable the new scorecard for production traffic.
+- [x] Freeze the 12-competency / 100-point modern weights in `resources/modern_competency_registry.json` (legacy workbook remains unchanged).
+- [x] Define a versioned evaluation JSON contract (`schemas/modern-audit-evaluation-v1.schema.json`).
+- [x] Add validation for required IDs, rating enums, evidence/T-IDs, N/A reason and confidence.
+- [x] Implement deterministic scoring from registry, N/A, call-type applicability and integrity overrides.
+- [~] Experimental one-call runner + transcript CLI added; legacy `process_one()` is intentionally not switched yet.
+- [x] Unit tests for score math, applicability, invalid output, CRM integrity, review and runner (CI passing).
+- [~] Synthetic all-Full/CRM fixtures and adapter tests added; real fixtures for all four call types remain pending.
+- [ ] Run a human-audit comparison pilot; report agreement and error categories (not started).
+- [ ] Only then enable the new scorecard for production traffic (blocked by pilot/review).
 
 ## Safety gates
 

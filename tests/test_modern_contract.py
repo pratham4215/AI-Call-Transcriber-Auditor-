@@ -13,7 +13,7 @@ def valid_payload():
             "rating": "Full",
             "evidence": [{
                 "source": "transcript",
-                "reference": "T-03",
+                "reference": "T003",
                 "quote_or_fact": "CRE greeted the customer.",
             }],
             "reasoning": "A clear opening greeting is present.",

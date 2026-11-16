@@ -10,7 +10,7 @@ class ModernReportingTests(unittest.TestCase):
         registry = [CompetencySpec("a", 50), CompetencySpec("b", 50, critical=True)]
         score = score_competencies({
             "a": {"rating": "Full"}, "b": {"rating": "Zero"},
-        }, registry, wrong_call_tagging=True)
+        }, registry, call_type="BOOKING", wrong_call_tagging=True)
         output = score_to_dict(score, call_type="BOOKING")
         self.assertEqual(output["score"]["percentage"], 0)
         self.assertEqual(output["competencies"][0]["earned"], 50)
@@ -21,7 +21,7 @@ class ModernReportingTests(unittest.TestCase):
         registry = [CompetencySpec("a", 100, allow_na=True)]
         score = score_competencies({
             "a": {"rating": "N/A", "na_reason": "not applicable"},
-        }, registry)
+        }, registry, call_type="ESCALATION")
         output = score_to_dict(
             score, call_type="ESCALATION",
             competency_metadata={"a": {"name": "Approved competency", "critical": True}},

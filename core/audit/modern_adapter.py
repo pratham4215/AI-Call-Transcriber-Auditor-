@@ -88,6 +88,14 @@ def evaluate_payload(
         ))
     output["human_review"] = review
     output["registry_version"] = raw_registry["registry_version"]
+    recording_result = next(
+        (item for item in score.results if item.competency_id == "recording_disclosure"),
+        None,
+    )
+    output["compliance_flags"] = {
+        "recording_disclosure_failure": bool(recording_result and recording_result.rating == "Zero"),
+        "recording_disclosure_rating": recording_result.rating if recording_result else None,
+    }
     if crm_integrity is not None:
         output["crm_integrity_diagnostics"] = {
             "rating": crm_integrity.rating,

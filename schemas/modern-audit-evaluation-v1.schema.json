@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kataria.internal/schemas/modern-audit-evaluation-v1.json",
+  "title": "Modern Audit Evaluation Contract v1",
+  "description": "Proposed versioned contract for evidence-first competency evaluations. This is not wired into the production pipeline yet.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "call_type", "competencies", "human_review"],
+  "properties": {
+    "schema_version": { "const": "modern-audit-evaluation-v1" },
+    "call_type": {
+      "enum": ["BOOKING", "FOLLOW_UPS", "SERVICE_NT_REQUIRED", "ESCALATION"]
+    },
+    "competencies": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/competency" },
+      "minItems": 1
+    },
+    "human_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "reasons"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "reasons": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "$defs": {
+    "competency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "rating", "evidence", "reasoning", "confidence", "human_review"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "rating": { "enum": ["Full", "Partial", "Zero", "N/A"] },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["source", "reference", "quote_or_fact"],
+            "properties": {
+              "source": { "enum": ["transcript", "crm"] },
+              "reference": { "type": "string", "minLength": 1 },
+              "quote_or_fact": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "reasoning": { "type": "string", "minLength": 1 },
+        "na_reason": { "type": ["string", "null"] },
+        "confidence": { "enum": ["High", "Medium", "Low"] },
+        "human_review": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "rating": { "const": "N/A" } }, "required": ["rating"] },
+          "then": { "properties": { "na_reason": { "type": "string", "minLength": 1 } }, "required": ["na_reason"] }
+        }
+      ]
+    }
+  }
+}

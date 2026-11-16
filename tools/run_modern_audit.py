@@ -23,6 +23,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("transcript", type=Path, help="One transcript file")
     parser.add_argument("--crm-snapshot", type=Path, default=None, help="CRM JSON sidecar")
+    parser.add_argument("--crm-integrity-checks", type=Path, default=None, help="JSON with six deterministic CRM integrity check states")
     parser.add_argument("--backend", choices=["ollama", "transformers", "openai"], default="ollama")
     parser.add_argument("--model", default=None)
     parser.add_argument("--out", type=Path, default=Path("reports/modern"))
@@ -38,6 +39,8 @@ def main() -> int:
         parser.error(f"transcript file not found: {args.transcript}")
     if args.crm_snapshot and not args.crm_snapshot.is_file():
         parser.error(f"CRM snapshot not found: {args.crm_snapshot}")
+    if args.crm_integrity_checks and not args.crm_integrity_checks.is_file():
+        parser.error(f"CRM integrity checks file not found: {args.crm_integrity_checks}")
 
     raw = read_transcript(args.transcript)
     turns = parse_transcript(raw)
@@ -50,9 +53,16 @@ def main() -> int:
         print(f"Call type unresolved; manual review. Evidence: {route_evidence}", file=sys.stderr)
         return 2
 
+    crm_integrity_checks = None
+    if args.crm_integrity_checks:
+        crm_integrity_checks = json.loads(args.crm_integrity_checks.read_text(encoding="utf-8"))
+        if not isinstance(crm_integrity_checks, dict):
+            parser.error("CRM integrity checks JSON must be an object")
+
     client = make_client(args.backend, args.model)
     result = run_modern_audit(
         client, turns, call_type, crm,
+        crm_integrity_checks=crm_integrity_checks,
         wrong_call_tagging=args.wrong_call_tagging,
         fake_booking=args.fake_booking,
         critical_crm_inconsistency=args.critical_crm_inconsistency,

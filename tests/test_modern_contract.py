@@ -43,6 +43,11 @@ class ModernContractTests(unittest.TestCase):
         payload["competencies"][0]["evidence"][0]["reference"] = ""
         self.assertTrue(any("reference must be non-empty" in e for e in validate_modern_evaluation(payload)))
 
+    def test_empty_evidence_rejected(self):
+        payload = valid_payload()
+        payload["competencies"][0]["evidence"] = []
+        self.assertTrue(any("evidence must contain at least one" in e for e in validate_modern_evaluation(payload)))
+
     def test_review_requires_reason(self):
         payload = valid_payload()
         payload["human_review"] = {"required": True, "reasons": []}

@@ -45,8 +45,8 @@ class ModernRunnerTests(unittest.TestCase):
         fixture = Path(__file__).parent / "fixtures" / "modern_evaluation_all_full.json"
         payload = json.loads(fixture.read_text(encoding="utf-8"))
         client = FakeClient(payload)
-        turns = [{"index": i, "speaker": "Agent", "text": "Service details."} for i in range(1, 8)]
-        turns.append({"index": 8, "speaker": "Customer", "text": "I confirm the appointment on 15 December."})
+        turns = [Turn(i, "", "", "Agent", "Service details.") for i in range(1, 8)]
+        turns.append(Turn(8, "", "", "Customer", "I confirm the appointment on 15 December."))
         result = run_modern_audit(client, turns, "BOOKING", {"booking": {"made_in_this_call": True}})
         self.assertEqual(client.calls, 1)
         self.assertTrue(result["booking_genuine"]["genuine"])
@@ -64,8 +64,8 @@ class ModernRunnerTests(unittest.TestCase):
             "address_or_location_turn_id": "", "fake_booking_reason": "no_customer_agreement",
         })
         client = FakeClient(payload)
-        turns = [{"index": i, "speaker": "Agent", "text": "Service details."} for i in range(1, 4)]
-        turns.append({"index": 4, "speaker": "Customer", "text": "No appointment was agreed."})
+        turns = [Turn(i, "", "", "Agent", "Service details.") for i in range(1, 4)]
+        turns.append(Turn(4, "", "", "Customer", "No appointment was agreed."))
         result = run_modern_audit(client, turns, "BOOKING")
         self.assertEqual(client.calls, 1)
         self.assertFalse(result["booking_genuine"]["genuine"])

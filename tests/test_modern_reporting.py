@@ -17,6 +17,15 @@ class ModernReportingTests(unittest.TestCase):
         self.assertEqual(output["competencies"][1]["rating"], "Zero")
         self.assertTrue(output["human_review"]["required"])
 
+    def test_grade_and_risk_are_deterministic(self):
+        registry = [CompetencySpec("a", 100, critical=True)]
+        high = score_competencies({"a": {"rating": "Full"}}, registry, call_type="BOOKING")
+        low = score_competencies({"a": {"rating": "Zero"}}, registry, call_type="BOOKING")
+        self.assertEqual(score_to_dict(high, call_type="BOOKING")["score"]["grade"], "Excellent")
+        self.assertEqual(score_to_dict(high, call_type="BOOKING")["score"]["risk"], "Low")
+        self.assertEqual(score_to_dict(low, call_type="BOOKING")["score"]["grade"], "Poor")
+        self.assertEqual(score_to_dict(low, call_type="BOOKING")["score"]["risk"], "High")
+
     def test_na_reason_and_metadata_preserved(self):
         registry = [CompetencySpec("a", 100, allow_na=True)]
         score = score_competencies({

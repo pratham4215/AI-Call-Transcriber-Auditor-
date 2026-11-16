@@ -84,6 +84,8 @@ def validate_modern_evaluation(payload: Any) -> List[str]:
         if not isinstance(evidence, list):
             errors.append(f"{prefix}.evidence must be an array")
             continue
+        if not evidence:
+            errors.append(f"{prefix}.evidence must contain at least one evidence item")
         for j, ev in enumerate(evidence):
             ep = f"{prefix}.evidence[{j}]"
             if not isinstance(ev, Mapping):

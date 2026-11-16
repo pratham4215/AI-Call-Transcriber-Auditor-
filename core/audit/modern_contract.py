@@ -1,7 +1,7 @@
 """Strict runtime validation for modern CRE audit model payloads."""
 from __future__ import annotations
 
-from typing import Any, List, Mapping
+import re\nfrom typing import Any, List, Mapping
 
 CONTRACT_VERSION = "modern-audit-evaluation-v1"
 CALL_TYPES = {"BOOKING", "FOLLOW_UPS", "SERVICE_NT_REQUIRED", "ESCALATION"}
@@ -119,8 +119,8 @@ def validate_modern_evaluation(payload: Any) -> List[str]:
                 errors.append(f"{ep} must contain only source, reference, quote_or_fact")
             if ev.get("source") not in EVIDENCE_SOURCES:
                 errors.append(f"{ep}.source must be transcript or crm")
-            if ev.get("source") == "transcript" and not str(ev.get("reference") or "").startswith("T-"):
-                errors.append(f"{ep}.reference must be a transcript T-ID")
+            if ev.get("source") == "transcript" and not re.fullmatch(r"T\\d{3}", str(ev.get("reference") or "")):
+                errors.append(f"{ep}.reference must be a transcript T### ID")
             for field in ("reference", "quote_or_fact"):
                 if not isinstance(ev.get(field), str) or not ev[field].strip():
                     errors.append(f"{ep}.{field} must be non-empty")

@@ -7,6 +7,7 @@ on:
       - "core/audit/modern_*.py"
       - "core/audit/crm_integrity.py"
       - "resources/modern_competency_registry.json"
+      - "schemas/modern-*.json"
       - "tests/test_modern_*.py"
       - "tests/fixtures/modern_*.json"
       - "tools/validate_modern_registry.py"
@@ -18,6 +19,7 @@ on:
       - "core/audit/modern_*.py"
       - "core/audit/crm_integrity.py"
       - "resources/modern_competency_registry.json"
+      - "schemas/modern-*.json"
       - "tests/test_modern_*.py"
       - "tests/fixtures/modern_*.json"
       - "tools/validate_modern_registry.py"
@@ -38,7 +40,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_modern_*.py' -v
       - name: Validate registry and scoring smoke cases
         run: python tools/validate_modern_registry.py
-      - name: Run evaluation JSON through adapter CLI
+      - name: Run evaluation JSON through adapter CLI with deterministic CRM checks
         run: |
-          python tools/score_modern_evaluation.py tests/fixtures/modern_evaluation_all_full.json --out /tmp/modern-score.json
-          python -c "import json; d=json.load(open('/tmp/modern-score.json')); assert d['score']['percentage']==100; assert len(d['competencies'])==12; print('Evaluation fixture CLI: PASS')"
+          python tools/score_modern_evaluation.py tests/fixtures/modern_evaluation_all_full.json --crm-integrity-checks tests/fixtures/modern_crm_integrity_pass.json --out /tmp/modern-score.json
+          python -c "import json; d=json.load(open('/tmp/modern-score.json')); assert d['score']['percentage']==100; assert len(d['competencies'])==12; assert d['human_review']['required'] is False; print('Evaluation + CRM fixture CLI: PASS')"

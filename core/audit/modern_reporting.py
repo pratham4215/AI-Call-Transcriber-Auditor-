@@ -6,6 +6,26 @@ from typing import Any, Dict, Mapping
 from .modern_scoring import AuditScore
 
 
+def grade_band(pct: float) -> str:
+    if pct >= 90:
+        return "Excellent"
+    if pct >= 75:
+        return "Good"
+    if pct >= 60:
+        return "Average"
+    if pct >= 40:
+        return "Needs Improvement"
+    return "Poor"
+
+
+def risk_band(score: AuditScore) -> str:
+    if score.overridden or score.percentage < 60:
+        return "High"
+    if score.percentage < 75 or score.critical_zero_ids:
+        return "Medium"
+    return "Low"
+
+
 def score_to_dict(
     score: AuditScore,
     *,
@@ -13,7 +33,7 @@ def score_to_dict(
     competency_metadata: Mapping[str, Mapping[str, Any]] | None = None,
     human_review_reasons: list[str] | None = None,
 ) -> Dict[str, Any]:
-    """Serialize a deterministic score without losing individual diagnostics."""
+    """Serialize deterministic score, grade/risk and individual diagnostics."""
     metadata = competency_metadata or {}
     critical_zeros = set(score.critical_zero_ids)
     items = []
@@ -41,6 +61,8 @@ def score_to_dict(
             "earned": score.earned,
             "possible": score.possible,
             "percentage": score.percentage,
+            "grade": grade_band(score.percentage),
+            "risk": risk_band(score),
             "overridden": score.overridden,
             "override_reason": score.override_reason,
         },

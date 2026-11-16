@@ -79,6 +79,11 @@ def evaluate_payload(
         uncertain_na=uncertain_na,
         low_confidence_critical_decision=low_confidence_critical_decision,
     )
+    if crm_integrity is None:
+        review["required"] = True
+        review["reasons"] = list(dict.fromkeys(
+            review["reasons"] + ["CRM integrity was model-rated; deterministic CRM check inputs were not supplied"]
+        ))
     if score.critical_zero_ids:
         review["required"] = True
         review["reasons"] = list(dict.fromkeys(

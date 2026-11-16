@@ -64,8 +64,8 @@ class ModernRunnerTests(unittest.TestCase):
             "address_or_location_turn_id": "", "fake_booking_reason": "no_customer_agreement",
         })
         client = FakeClient(payload)
-        turns = [Turn(i, "", "", "Agent", "Service details.") for i in range(1, 4)]
-        turns.append(Turn(4, "", "", "Customer", "No appointment was agreed."))
+        turns = [Turn(i, "", "", "Agent", "Service details.") for i in range(1, 8)]
+        turns.append(Turn(8, "", "", "Customer", "No appointment was agreed."))
         result = run_modern_audit(client, turns, "BOOKING")
         self.assertEqual(client.calls, 1)
         self.assertFalse(result["booking_genuine"]["genuine"])

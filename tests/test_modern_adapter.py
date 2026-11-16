@@ -7,7 +7,7 @@ from core.audit.modern_adapter import evaluate_payload
 
 def payload(rating="Full", call_type="BOOKING"):
     _, specs = load_registry()
-    return {
+    result = {
         "schema_version": "modern-audit-evaluation-v1",
         "call_type": call_type,
         "competencies": [{
@@ -20,6 +20,17 @@ def payload(rating="Full", call_type="BOOKING"):
         } for s in specs],
         "human_review": {"required": False, "reasons": []},
     }
+    if call_type == "BOOKING":
+        result["booking_genuine"] = {
+            "genuine": True, "commitment_type": "date_time_confirmed",
+            "customer_agreement_confirmed": True, "agreement_turn_id": "T-2",
+            "final_customer_stance": "confirmed", "final_stance_turn_id": "T-2",
+            "date_confirmed": True, "date_turn_id": "T-2",
+            "time_confirmed": True, "time_turn_id": "T-2",
+            "address_or_location_confirmed": True, "address_or_location_turn_id": "T-2",
+            "fake_booking_reason": "none",
+        }
+    return result
 
 
 class ModernAdapterTests(unittest.TestCase):

@@ -119,7 +119,7 @@ def validate_modern_evaluation(payload: Any) -> List[str]:
                 errors.append(f"{ep} must contain only source, reference, quote_or_fact")
             if ev.get("source") not in EVIDENCE_SOURCES:
                 errors.append(f"{ep}.source must be transcript or crm")
-            if ev.get("source") == "transcript" and not re.fullmatch(r"T\\d{3}", str(ev.get("reference") or "")):
+            if ev.get("source") == "transcript" and not re.fullmatch(r"T\d{3}", str(ev.get("reference") or "")):
                 errors.append(f"{ep}.reference must be a transcript T### ID")
             for field in ("reference", "quote_or_fact"):
                 if not isinstance(ev.get(field), str) or not ev[field].strip():

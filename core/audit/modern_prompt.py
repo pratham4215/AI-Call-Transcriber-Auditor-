@@ -60,7 +60,7 @@ def build_modern_evaluation_prompt(
             tid = str(getattr(turn, "index", i))
             speaker = str(getattr(turn, "speaker", "Unknown"))
             text = str(getattr(turn, "text", ""))
-        transcript_lines.append(f"T-{tid} [{speaker}]: {text}")
+        try:\n            tid_label = f"T{int(tid):03d}"\n        except (TypeError, ValueError):\n            tid_label = f"T{tid}"\n        transcript_lines.append(f"{tid_label} [{speaker}]: {text}")
     transcript_block = "\n".join(transcript_lines)
 
     crm_json = json.dumps(crm_details or {}, ensure_ascii=False, indent=2, default=str)

@@ -33,7 +33,7 @@ def run_modern_audit(
         enforce_booking_integrity(
             payload, list(turns), booked_on_earlier_call(dict(crm_details or {}))
         )
-        integrity_flags["fake_booking"] = booking.get("genuine") is False
+        integrity_flags["fake_booking"] = bool(integrity_flags.get("fake_booking") or booking.get("genuine") is False)
         if booking.get("too_short") is True:
             integrity_flags["low_confidence_critical_decision"] = True
         # The narrow legacy contradiction adjudication is deliberately not

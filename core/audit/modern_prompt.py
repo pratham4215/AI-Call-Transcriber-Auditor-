@@ -63,7 +63,8 @@ def build_modern_evaluation_prompt(
         try:
             tid_label = f"T{int(tid):03d}"
         except (TypeError, ValueError):
-            tid_label = f"T{tid}"\n        transcript_lines.append(f"{tid_label} [{speaker}]: {text}")
+            tid_label = f"T{tid}"
+        transcript_lines.append(f"{tid_label} [{speaker}]: {text}")
     transcript_block = "\n".join(transcript_lines)
 
     crm_json = json.dumps(crm_details or {}, ensure_ascii=False, indent=2, default=str)

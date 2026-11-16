@@ -33,7 +33,7 @@ class ModernRunnerTests(unittest.TestCase):
             {"vehicle": {"kms": 10000}},
         )
         self.assertEqual(client.calls, 1)
-        self.assertEqual(client.last_user.count("T-1 [Agent]:"), 1)
+        self.assertEqual(client.last_user.count("T001 [Agent]:"), 1)
         self.assertEqual(result["score"]["percentage"], 100)
         self.assertEqual(len(result["competencies"]), 12)
         self.assertIn("competencies", client.last_schema["properties"])

@@ -7,14 +7,18 @@ on:
       - "core/audit/modern_*.py"
       - "resources/modern_competency_registry.json"
       - "tests/test_modern_*.py"
+      - "tests/fixtures/modern_*.json"
       - "tools/validate_modern_registry.py"
+      - "tools/score_modern_evaluation.py"
       - ".github/workflows/modern-audit-tests.yml"
   pull_request:
     paths:
       - "core/audit/modern_*.py"
       - "resources/modern_competency_registry.json"
       - "tests/test_modern_*.py"
+      - "tests/fixtures/modern_*.json"
       - "tools/validate_modern_registry.py"
+      - "tools/score_modern_evaluation.py"
 
 jobs:
   modern-audit-unit-tests:
@@ -28,3 +32,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_modern_*.py' -v
       - name: Validate registry and scoring smoke cases
         run: python tools/validate_modern_registry.py
+      - name: Run evaluation JSON through adapter CLI
+        run: |
+          python tools/score_modern_evaluation.py tests/fixtures/modern_evaluation_all_full.json --out /tmp/modern-score.json
+          python -c "import json; d=json.load(open('/tmp/modern-score.json')); assert d['score']['percentage']==100; assert len(d['competencies'])==12; print('Evaluation fixture CLI: PASS')"

@@ -31,7 +31,7 @@ class ModernScoringTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             score({"a": {"rating": "N/A"}, "b": {"rating": "Full"}, "c": {"rating": "Full"}})
         with self.assertRaises(ValueError):
-            score({"a": {"rating": "N/A", "na_reason": "not applicable"}, "b": {"rating": "Full"}, "c": {"rating": "Full"}})
+            score({"a": {"rating": "N/A", "na_reason": " "}, "b": {"rating": "Full"}, "c": {"rating": "Full"}})
 
     def test_na_full_credit_policy(self):
         result = score({"a": {"rating": "N/A", "na_reason": "approved condition"}, "b": {"rating": "Full"}, "c": {"rating": "Full"}})

@@ -1,0 +1,26 @@
+name: Modern Audit Unit Tests
+
+on:
+  push:
+    branches: ["modern-audit-work"]
+    paths:
+      - "core/audit/modern_contract.py"
+      - "core/audit/modern_scoring.py"
+      - "tests/test_modern_*.py"
+      - ".github/workflows/modern-audit-tests.yml"
+  pull_request:
+    paths:
+      - "core/audit/modern_contract.py"
+      - "core/audit/modern_scoring.py"
+      - "tests/test_modern_*.py"
+
+jobs:
+  modern-audit-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run isolated modern audit tests
+        run: python -m unittest tests.test_modern_contract tests.test_modern_scoring tests.test_modern_scoring_edge_cases -v

@@ -1,7 +1,8 @@
 """Strict runtime validation for modern CRE audit model payloads."""
 from __future__ import annotations
 
-import re\nfrom typing import Any, List, Mapping
+import re
+from typing import Any, List, Mapping
 
 CONTRACT_VERSION = "modern-audit-evaluation-v1"
 CALL_TYPES = {"BOOKING", "FOLLOW_UPS", "SERVICE_NT_REQUIRED", "ESCALATION"}

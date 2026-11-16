@@ -36,6 +36,20 @@ class ModernAdapterTests(unittest.TestCase):
         self.assertEqual(result["competencies"][0]["earned"], result["competencies"][0]["weight"])
         self.assertTrue(result["human_review"]["required"])
 
+    def test_deterministic_crm_failure_overrides_model_rating(self):
+        checks = {
+            "booking": "material_failure", "follow_up": "not_applicable",
+            "snr": "not_applicable", "escalation": "not_applicable",
+            "cre_remarks": "pass", "customer_remarks": "not_applicable",
+        }
+        result = evaluate_payload(payload(), crm_integrity_checks=checks)
+        crm = next(item for item in result["competencies"] if item["id"] == "crm_documentation_integrity")
+        self.assertEqual(crm["rating"], "Zero")
+        self.assertEqual(crm["earned"], 0)
+        self.assertEqual(result["score"]["percentage"], 90)
+        self.assertEqual(result["crm_integrity_diagnostics"]["source"], "deterministic_crm_rules")
+        self.assertTrue(result["human_review"]["required"])
+
     def test_incomplete_competency_set_rejected(self):
         p = payload()
         p["competencies"].pop()

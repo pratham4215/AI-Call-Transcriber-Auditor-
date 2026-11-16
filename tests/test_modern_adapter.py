@@ -13,7 +13,7 @@ def payload(rating="Full", call_type="BOOKING"):
         "competencies": [{
             "id": s.competency_id,
             "rating": rating,
-            "evidence": [{"source": "transcript", "reference": "T-1", "quote_or_fact": "Relevant evidence."}],
+            "evidence": [{"source": "transcript", "reference": "T001", "quote_or_fact": "Relevant evidence."}],
             "reasoning": "Test rationale.",
             "confidence": "High",
             "human_review": False,
@@ -23,11 +23,11 @@ def payload(rating="Full", call_type="BOOKING"):
     if call_type == "BOOKING":
         result["booking_genuine"] = {
             "genuine": True, "commitment_type": "date_time_confirmed",
-            "customer_agreement_confirmed": True, "agreement_turn_id": "T-2",
-            "final_customer_stance": "confirmed", "final_stance_turn_id": "T-2",
-            "date_confirmed": True, "date_turn_id": "T-2",
-            "time_confirmed": True, "time_turn_id": "T-2",
-            "address_or_location_confirmed": True, "address_or_location_turn_id": "T-2",
+            "customer_agreement_confirmed": True, "agreement_turn_id": "T002",
+            "final_customer_stance": "confirmed", "final_stance_turn_id": "T002",
+            "date_confirmed": True, "date_turn_id": "T002",
+            "time_confirmed": True, "time_turn_id": "T002",
+            "address_or_location_confirmed": True, "address_or_location_turn_id": "T002",
             "fake_booking_reason": "none",
         }
     return result

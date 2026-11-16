@@ -28,7 +28,8 @@ class ModernAdapterTests(unittest.TestCase):
         self.assertEqual(result["score"]["percentage"], 100)
         self.assertEqual(len(result["competencies"]), 12)
         self.assertEqual(result["registry_version"], "modern-cre-audit-12-v1")
-        self.assertTrue(result["human_review"]["required"])\n        self.assertTrue(any("deterministic CRM check inputs" in reason for reason in result["human_review"]["reasons"]))
+        self.assertTrue(result["human_review"]["required"])
+        self.assertTrue(any("deterministic CRM check inputs" in reason for reason in result["human_review"]["reasons"]))
 
     def test_wrong_tag_overrides_final_but_preserves_items(self):
         result = evaluate_payload(payload(), wrong_call_tagging=True)
